@@ -123,4 +123,38 @@ describe('rankRepositories', () => {
       ranked.topSkills.find((skill) => skill.id === 'payments')?.matchedSignals,
     ).toContain('"stripe" in description');
   });
+
+  it('ranks a verified fork from attributed files instead of other contributors metadata', () => {
+    const verifiedFork: GitHubRepository = {
+      ...reactDashboard,
+      fork: true,
+      userContribution: {
+        username: 'octocat',
+        outcome: 'verified',
+        verified: true,
+        status: 'Contribution verified — 2 commits across 1 branch analyzed',
+        reason: 'Contribution verified',
+        commitCount: 2,
+        branchCount: 1,
+        branchesInspected: 3,
+        fileCount: 1,
+        additions: 30,
+        deletions: 2,
+        firstCommitAt: '2026-01-01T00:00:00Z',
+        lastCommitAt: new Date().toISOString(),
+        identityEvidence: ['2 commits linked by GitHub to @octocat'],
+        filePaths: ['scripts/model.py'],
+        languages: ['Python'],
+      },
+    };
+
+    const ranked = rankRepository(verifiedFork, 'frontend-engineering');
+
+    expect(ranked.careerRelevanceScore).toBe(0);
+    expect(ranked.evidence[0]?.value).toContain('Contribution verified');
+    expect(
+      ranked.components.find((item) => item.label === 'Project substance')
+        ?.detail,
+    ).not.toContain('fork');
+  });
 });

@@ -122,8 +122,7 @@ const portfolio = {
       engineering: null,
       strength: null,
       contribution: 0,
-      explanation:
-        'Fork: the code is someone else’s work, so it is not portfolio evidence.',
+      explanation: 'No contributions from this GitHub user were found.',
     },
   ],
   coverage: {
@@ -133,8 +132,7 @@ const portfolio = {
     skipped: 2,
     skipReasons: [
       {
-        reason:
-          'Fork: the code is someone else’s work, so it is not portfolio evidence.',
+        reason: 'No contributions from this GitHub user were found.',
         count: 2,
       },
     ],
@@ -322,7 +320,7 @@ describe('HomePage', () => {
     expect(screen.getAllByText('Skipped').length).toBeGreaterThan(0);
     expect(screen.getByText('No contribution')).toBeInTheDocument();
     expect(
-      screen.getAllByText(/fork: the code is someone else/i).length,
+      screen.getAllByText(/no contributions from this github user/i).length,
     ).toBeGreaterThan(0);
   });
 

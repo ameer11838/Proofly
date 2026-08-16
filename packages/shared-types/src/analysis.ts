@@ -1,5 +1,9 @@
 import type { CareerPath } from './career.js';
 import type { GitHubRepository } from './github.js';
+import type {
+  UserContributionReport,
+  UserContributionSummary,
+} from './contribution.js';
 
 export interface EvidenceReference {
   kind: 'github' | 'file' | 'static-analysis' | 'dependency';
@@ -116,6 +120,8 @@ export interface CodeEvidence {
   category: ScoreCategoryKey;
   scoreImpact: string;
   githubUrl: string;
+  /** Commit containing this fragment when evidence came from a verified fork patch. */
+  commitSha?: string;
 }
 
 export interface ImprovementAction {
@@ -262,6 +268,8 @@ export interface PortfolioContributor {
   contribution: number;
   /** Why this repository did or did not move the portfolio score. */
   explanation: string;
+  /** Authorship verification for a fork. */
+  userContribution?: UserContributionSummary;
 }
 
 /**
@@ -376,4 +384,6 @@ export interface RepositoryAnalysisResponse {
   suggestions: string[];
   analyzedFiles: string[];
   ignoredFilesCount: number;
+  /** Full attribution audit when this analysis is limited to a fork user's patches. */
+  userContribution?: UserContributionReport;
 }

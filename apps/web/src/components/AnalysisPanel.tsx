@@ -29,6 +29,18 @@ export function AnalysisPanel({ analysis }: AnalysisPanelProps) {
 
   return (
     <div className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      {analysis.userContribution ? (
+        <div className="border-b border-emerald-200 bg-emerald-50 px-6 py-3 text-sm text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200">
+          <span className="font-semibold">
+            {analysis.userContribution.status}
+          </span>
+          <span className="ml-2">
+            Only lines added in these verified commits are used below;
+            repository-wide code and metadata from other contributors are
+            excluded.
+          </span>
+        </div>
+      ) : null}
       {/* 1. The score itself, and what it is made of. */}
       <div className="border-b border-slate-200 dark:border-slate-800 bg-gradient-to-br from-slate-950 to-indigo-950 px-6 py-6 text-white">
         <div className="flex flex-wrap items-start justify-between gap-6">

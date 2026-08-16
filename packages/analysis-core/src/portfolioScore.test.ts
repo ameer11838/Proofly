@@ -164,14 +164,8 @@ describe('buildCareerPortfolioScore', () => {
       outcomes: [
         analyzed('a', 80, 75),
         analyzed('b', 70, 70),
-        skipped(
-          'c',
-          'Fork: the code is someone else’s work, so it is not portfolio evidence.',
-        ),
-        skipped(
-          'd',
-          'Fork: the code is someone else’s work, so it is not portfolio evidence.',
-        ),
+        skipped('c', 'No contributions from this GitHub user were found.'),
+        skipped('d', 'No contributions from this GitHub user were found.'),
         skipped('e', 'Empty repository: GitHub reports no content to read.'),
       ],
     });
@@ -182,8 +176,7 @@ describe('buildCareerPortfolioScore', () => {
     expect(result.coverage.skipped).toBe(3);
     expect(result.coverage.skipReasons).toEqual([
       {
-        reason:
-          'Fork: the code is someone else’s work, so it is not portfolio evidence.',
+        reason: 'No contributions from this GitHub user were found.',
         count: 2,
       },
       {
@@ -236,10 +229,7 @@ describe('buildCareerPortfolioScore', () => {
     const result = buildCareerPortfolioScore({
       careerPath: career,
       outcomes: [
-        skipped(
-          'forked',
-          'Fork: the code is someone else’s work, so it is not portfolio evidence.',
-        ),
+        skipped('forked', 'No contributions from this GitHub user were found.'),
         analyzed('weak', 20, 25, 3),
         analyzed('strong', 90, 85, 8.8),
       ],
@@ -266,7 +256,9 @@ describe('buildCareerPortfolioScore', () => {
     expect(fork?.status).toBe('skipped');
     expect(fork?.contribution).toBe(0);
     expect(fork?.careerRelevance).toBeNull();
-    expect(fork?.explanation).toContain('Fork');
+    expect(fork?.explanation).toContain(
+      'No contributions from this GitHub user',
+    );
   });
 
   it('weights the strongest repository most heavily', () => {

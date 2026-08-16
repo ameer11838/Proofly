@@ -276,9 +276,9 @@ export function HomePage() {
                   </p>
                 </div>
                 <p className="max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-                  Ranking is a metadata fit, not a hiring score. Run the file
-                  analysis on a repository to see its evidence-backed 0–10
-                  score.
+                  Ranking is an evidence fit, not a hiring score. Forks use only
+                  verified contribution paths and languages; run the code
+                  analysis to see the evidence-backed 0–10 score.
                 </p>
               </div>
               <div className="grid gap-5">

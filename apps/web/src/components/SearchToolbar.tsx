@@ -62,8 +62,8 @@ export function SearchToolbar({
       </button>
 
       <p className="mt-4 text-sm leading-6 text-slate-500 dark:text-slate-400">
-        Ranking reads public repository metadata only. Choosing a repository
-        runs the deeper file-level analysis.
+        Ranking reads public repository metadata. For forks, Proofly also
+        verifies the user’s commits across every branch before any work counts.
       </p>
     </form>
   );

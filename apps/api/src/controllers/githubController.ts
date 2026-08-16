@@ -15,6 +15,12 @@ import {
   repositoryQuerySchema,
 } from '../validation/github.js';
 import { analyzeRepositoryFromGitHub } from '../services/repositoryAnalysisService.js';
+import { mapWithConcurrency } from '../services/repositoryAnalysisService.js';
+import {
+  resolveForkContributions,
+  summarizeContribution,
+  unavailableContributionSummary,
+} from '../services/contributionService.js';
 
 export async function listRankedRepositories(
   request: Request,
@@ -53,8 +59,39 @@ export async function listRankedRepositories(
       client.getUserProfile(usernameResult.data),
       client.listPublicRepositories(usernameResult.data),
     ]);
-    const rankedRepositories = rankRepositories(
+    const attributedRepositories = await mapWithConcurrency(
       repositories,
+      5,
+      async (repository) => {
+        if (!repository.fork) return repository;
+        try {
+          const resolution = await resolveForkContributions(
+            client,
+            repository,
+            profile,
+          );
+          return {
+            ...repository,
+            userContribution: summarizeContribution(resolution.report),
+          };
+        } catch (error) {
+          const reason =
+            error instanceof GitHubClientError &&
+            error.code === 'GITHUB_RATE_LIMITED'
+              ? 'GitHub rate limit reached before contributions could be verified.'
+              : undefined;
+          return {
+            ...repository,
+            userContribution: unavailableContributionSummary(
+              profile.login,
+              reason,
+            ),
+          };
+        }
+      },
+    );
+    const rankedRepositories = rankRepositories(
+      attributedRepositories,
       queryResult.data.careerPath,
     );
 
@@ -134,12 +171,23 @@ export async function streamRepositoryAnalysis(
   });
 
   try {
+    const [repository, profile] = await Promise.all([
+      client.getRepository(ownerResult.data, repoResult.data),
+      client.getUserProfile(ownerResult.data),
+    ]);
+    const contributionResolution = repository.fork
+      ? await resolveForkContributions(client, repository, profile)
+      : undefined;
     const analysis = await analyzeRepositoryFromGitHub(
       client,
       ownerResult.data,
       repoResult.data,
       queryResult.data.careerPath,
-      { onProgress: (event) => send('progress', event) },
+      {
+        onProgress: (event) => send('progress', event),
+        knownRepository: repository,
+        contributionResolution,
+      },
     );
 
     send('result', analysis satisfies RepositoryAnalysisResponse);

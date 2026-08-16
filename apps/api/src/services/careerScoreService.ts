@@ -9,12 +9,18 @@ import type {
   GitHubRepository,
   PortfolioProgressEvent,
   RepositoryAnalysisResponse,
+  UserContributionSummary,
 } from '@proofly/shared-types';
 import { GitHubClient, GitHubClientError } from '../github/githubClient.js';
 import {
   analyzeRepositoryFromGitHub,
   mapWithConcurrency,
 } from './repositoryAnalysisService.js';
+import {
+  resolveForkContributions,
+  summarizeContribution,
+  type ContributionResolution,
+} from './contributionService.js';
 
 /**
  * Upper bound on repositories considered. GitHub's owner listing returns at most 100 per
@@ -47,7 +53,7 @@ function cacheKey(
   repository: GitHubRepository,
   careerPath: CareerPath,
 ): string {
-  return `${repository.fullName}@${repository.defaultBranch}@${repository.pushedAt ?? 'never'}@${careerPath}`;
+  return `${repository.fullName}@${repository.defaultBranch}@${repository.pushedAt ?? 'never'}@${repository.userContribution?.lastCommitAt ?? 'whole-repo'}@${careerPath}`;
 }
 
 function readCache(key: string): RepositoryAnalysisResponse | null {
@@ -79,7 +85,12 @@ function writeCache(key: string, analysis: RepositoryAnalysisResponse): void {
 /** Reasons a repository is never worth spending an API call on. */
 function ineligibleReason(repository: GitHubRepository): string | null {
   if (repository.fork) {
-    return 'Fork: the code is someone else’s work, so it is not portfolio evidence.';
+    if (!repository.userContribution?.verified) {
+      return (
+        repository.userContribution?.reason ??
+        'No contributions from this GitHub user were found.'
+      );
+    }
   }
 
   if (repository.size === 0) {
@@ -107,8 +118,44 @@ export async function buildUserCareerScore(
     message: `LISTING PUBLIC REPOSITORIES FOR @${username.toUpperCase()}...`,
   });
 
-  const allRepositories = await client.listPublicRepositories(username);
+  const [allRepositories, profile] = await Promise.all([
+    client.listPublicRepositories(username),
+    client.getUserProfile(username),
+  ]);
   const repositories = allRepositories.slice(0, maxConsideredRepositories);
+
+  const contributionResolutions = new Map<string, ContributionResolution>();
+  let rateLimited = false;
+  const attributedRepositories = await mapWithConcurrency(
+    repositories,
+    repositoryConcurrency,
+    async (repository) => {
+      if (!repository.fork) return repository;
+      try {
+        const resolution = await resolveForkContributions(
+          client,
+          repository,
+          profile,
+        );
+        contributionResolutions.set(repository.fullName, resolution);
+        return {
+          ...repository,
+          userContribution: summarizeContribution(resolution.report),
+        };
+      } catch (error) {
+        if (
+          error instanceof GitHubClientError &&
+          error.code === 'GITHUB_RATE_LIMITED'
+        ) {
+          rateLimited = true;
+        }
+        return {
+          ...repository,
+          userContribution: unavailableContribution(username, error),
+        };
+      }
+    },
+  );
 
   report({
     stage: 'discovering',
@@ -128,7 +175,7 @@ export async function buildUserCareerScore(
   });
 
   // Every discovered repository is ranked from metadata before anything is read.
-  const ranked = rankRepositories(repositories, careerPath);
+  const ranked = rankRepositories(attributedRepositories, careerPath);
 
   report({
     stage: 'ranking',
@@ -173,7 +220,6 @@ export async function buildUserCareerScore(
   let deeplyAnalyzed = 0;
   let skipped = outcomes.size;
   // Once GitHub starts refusing requests, further calls only waste the remaining budget.
-  let rateLimited = false;
 
   await mapWithConcurrency(queue, repositoryConcurrency, async (repository) => {
     if (rateLimited) {
@@ -207,7 +253,12 @@ export async function buildUserCareerScore(
           repository.owner.login,
           repository.name,
           careerPath,
-          { knownRepository: repository },
+          {
+            knownRepository: repository,
+            contributionResolution: contributionResolutions.get(
+              repository.fullName,
+            ),
+          },
         ));
 
       if (!cached) {
@@ -273,7 +324,7 @@ export async function buildUserCareerScore(
 
   // Every repository failing is a service problem, not an assessment: reporting a score
   // from nothing would present an outage as if it were a finding.
-  if (queue.length > 0 && deeplyAnalyzed === 0) {
+  if ((queue.length > 0 || rateLimited) && deeplyAnalyzed === 0) {
     throw new GitHubClientError(
       rateLimited
         ? 'GitHub rate limit reached. Add a GITHUB_TOKEN to the API environment and try again.'
@@ -309,6 +360,35 @@ export async function buildUserCareerScore(
   });
 
   return portfolio;
+}
+
+function unavailableContribution(
+  username: string,
+  error: unknown,
+): UserContributionSummary {
+  const rateLimited =
+    error instanceof GitHubClientError && error.code === 'GITHUB_RATE_LIMITED';
+  const reason = rateLimited
+    ? 'GitHub rate limit reached before contributions could be verified.'
+    : 'GitHub could not verify contributions for this fork.';
+  return {
+    username,
+    outcome: 'unavailable',
+    verified: false,
+    status: `Skipped — ${reason}`,
+    reason,
+    commitCount: 0,
+    branchCount: 0,
+    branchesInspected: 0,
+    fileCount: 0,
+    additions: 0,
+    deletions: 0,
+    firstCommitAt: null,
+    lastCommitAt: null,
+    identityEvidence: [],
+    filePaths: [],
+    languages: [],
+  };
 }
 
 function describeFailure(error: unknown): string {

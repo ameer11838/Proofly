@@ -36,16 +36,17 @@ export function rankRepositories(
 }
 
 /**
- * Ranking runs on repository metadata only — no file contents are downloaded at this
- * stage — so it reports a metadata fit that the deep analysis can later confirm.
+ * Ranking consumes metadata prepared by the API. For a fork that metadata is already
+ * attribution-scoped to languages and paths changed in the user's verified commits.
  */
 export function rankRepository(
   repository: GitHubRepository,
   careerPath: CareerPath,
 ): RankedRepository {
+  const evidenceRepository = attributionScopedRepository(repository);
   const { skills } = getCareerSkillMap(careerPath);
-  const topics = repository.topics.map((topic) => topic.toLowerCase());
-  const description = (repository.description ?? '').toLowerCase();
+  const topics = evidenceRepository.topics.map((topic) => topic.toLowerCase());
+  const description = (evidenceRepository.description ?? '').toLowerCase();
   const name = repository.name.toLowerCase().replace(/[-_]/g, ' ');
 
   // Skills that only reveal themselves inside source files (test coverage, error handling)
@@ -57,7 +58,12 @@ export function rankRepository(
   );
 
   const matches = observableSkills.map((skill) =>
-    matchSkill(skill, { repository, topics, description, name }),
+    matchSkill(skill, {
+      repository: evidenceRepository,
+      topics,
+      description,
+      name,
+    }),
   );
   const totalWeight = matches.reduce((sum, match) => sum + match.weight, 0);
   const earnedWeight = matches.reduce(
@@ -69,10 +75,10 @@ export function rankRepository(
 
   const components: RankComponent[] = [
     careerSkillComponent(matches, careerRelevanceScore),
-    documentationComponent(repository),
-    activityComponent(repository),
-    engagementComponent(repository),
-    substanceComponent(repository),
+    documentationComponent(evidenceRepository),
+    activityComponent(evidenceRepository),
+    engagementComponent(evidenceRepository),
+    substanceComponent(evidenceRepository),
   ];
 
   const relevanceScore = Math.round(
@@ -94,7 +100,15 @@ export function rankRepository(
       matchedSignals: match.matchedSignals,
     }));
 
-  const evidence = buildEvidence(repository, components, topSkills);
+  const evidence = buildEvidence(evidenceRepository, components, topSkills);
+  if (repository.userContribution) {
+    evidence.unshift({
+      label: repository.userContribution.verified
+        ? 'Verified contribution'
+        : 'Fork attribution',
+      value: repository.userContribution.status,
+    });
+  }
 
   return {
     repository,
@@ -112,7 +126,32 @@ export function rankRepository(
       topSkills,
       careerRelevanceScore,
     ),
-    sources: buildSources(repository, topSkills),
+    sources: buildSources(evidenceRepository, topSkills),
+  };
+}
+
+/** Removes repository-wide signals that may have been created by somebody else. */
+function attributionScopedRepository(
+  repository: GitHubRepository,
+): GitHubRepository {
+  if (!repository.fork) return repository;
+  const contribution = repository.userContribution;
+  return {
+    ...repository,
+    description: null,
+    homepage: null,
+    topics: [],
+    language: contribution?.languages[0] ?? null,
+    stargazersCount: 0,
+    forksCount: 0,
+    watchersCount: 0,
+    openIssuesCount: 0,
+    size: contribution?.verified
+      ? Math.max(1, Math.ceil(contribution.additions / 20))
+      : 0,
+    licenseName: null,
+    pushedAt: contribution?.lastCommitAt ?? null,
+    fork: !contribution?.verified,
   };
 }
 

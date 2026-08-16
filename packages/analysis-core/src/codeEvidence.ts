@@ -9,6 +9,12 @@ export interface RepositoryFileEvidence {
   path: string;
   size: number;
   content: string;
+  /** Git ref containing these exact lines; defaults to the repository default branch. */
+  ref?: string;
+  /** Original 1-indexed line number of content[0], used for diff-derived evidence. */
+  startLine?: number;
+  /** Distinguishes multiple contributed hunks from the same path. */
+  evidenceId?: string;
 }
 
 const contextLinesBefore = 2;
@@ -182,7 +188,8 @@ export function extractCodeEvidence(
           break;
         }
 
-        if (seenPaths.has(file.path)) {
+        const fileKey = file.evidenceId ?? file.path;
+        if (seenPaths.has(fileKey)) {
           continue;
         }
 
@@ -210,7 +217,7 @@ export function extractCodeEvidence(
           start: lineIndex - contextLinesBefore,
           end: lineIndex + contextLinesAfter,
         });
-        seenPaths.add(file.path);
+        seenPaths.add(fileKey);
         perSkill += 1;
       }
     }
@@ -241,8 +248,9 @@ function toCodeEvidence(
   const slice = lines.slice(start, end + 1).map(clampLine);
   const dedented = dedent(slice);
 
-  const startLine = start + 1;
-  const endLine = end + 1;
+  const lineBase = match.file.startLine ?? 1;
+  const startLine = lineBase + start;
+  const endLine = lineBase + end;
 
   return {
     id: `${match.owner.skillId}-${index}`,
@@ -258,10 +266,11 @@ function toCodeEvidence(
     skillLabel: match.owner.skillLabel,
     category: match.owner.category,
     scoreImpact: match.owner.scoreImpact,
-    githubUrl: `${repository.htmlUrl}/blob/${repository.defaultBranch}/${match.file.path
+    githubUrl: `${repository.htmlUrl}/blob/${match.file.ref ?? repository.defaultBranch}/${match.file.path
       .split('/')
       .map(encodeURIComponent)
       .join('/')}#L${startLine}-L${endLine}`,
+    commitSha: match.file.ref,
   };
 }
 

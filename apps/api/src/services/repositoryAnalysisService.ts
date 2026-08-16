@@ -10,7 +10,12 @@ import type {
   InspectedFile,
   RepositoryAnalysisResponse,
 } from '@proofly/shared-types';
-import { GitHubClient, type GitHubTreeItem } from '../github/githubClient.js';
+import {
+  GitHubClient,
+  GitHubClientError,
+  type GitHubTreeItem,
+} from '../github/githubClient.js';
+import type { ContributionResolution } from './contributionService.js';
 
 const maxAnalyzedFiles = 24;
 const maxFileSizeBytes = 45_000;
@@ -67,6 +72,8 @@ export interface AnalyzeRepositoryOptions {
    * when a portfolio pass analyzes up to 100 repositories.
    */
   knownRepository?: GitHubRepository;
+  /** Required for a fork: verified commits and patch-derived source owned by the user. */
+  contributionResolution?: ContributionResolution;
 }
 
 export async function analyzeRepositoryFromGitHub(
@@ -88,6 +95,22 @@ export async function analyzeRepositoryFromGitHub(
 
   const repository =
     knownRepository ?? (await client.getRepository(owner, repo));
+
+  if (repository.fork) {
+    if (!options.contributionResolution?.report.verified) {
+      throw new GitHubClientError(
+        'No contributions from this GitHub user were found.',
+        422,
+        'GITHUB_NO_CONTRIBUTIONS',
+      );
+    }
+    return analyzeVerifiedContribution(
+      repository,
+      careerPath,
+      options.contributionResolution,
+      onProgress,
+    );
+  }
 
   report({
     stage: 'fetching-repository',
@@ -267,6 +290,129 @@ export async function analyzeRepositoryFromGitHub(
     fileReport,
     onProgress,
   });
+}
+
+function analyzeVerifiedContribution(
+  repository: GitHubRepository,
+  careerPath: CareerPath,
+  resolution: ContributionResolution,
+  onProgress?: (event: AnalysisProgressEvent) => void,
+): RepositoryAnalysisResponse {
+  const report = onProgress ?? (() => {});
+  const { report: contribution, evidenceFiles } = resolution;
+  report({
+    stage: 'fetching-repository',
+    status: 'complete',
+    message: `${contribution.status.toUpperCase()} · ${contribution.branchesInspected} BRANCHES INSPECTED`,
+    stageProgress: 1,
+  });
+
+  const admitted: RepositoryFileEvidence[] = [];
+  let totalBytes = 0;
+  for (const file of evidenceFiles) {
+    if (totalBytes >= maxTotalContentBytes) break;
+    const content = file.content.slice(0, maxFileSizeBytes);
+    admitted.push({ ...file, content });
+    totalBytes += content.length;
+  }
+  report({
+    stage: 'inspecting-code',
+    status: 'complete',
+    message: `${admitted.length} CONTRIBUTED CODE HUNK(S) READ · ${Math.round(totalBytes / 1000)} KB INSPECTED`,
+    counters: {
+      filesSelected: evidenceFiles.length,
+      filesInspected: admitted.length,
+    },
+    stageProgress: 1,
+  });
+
+  const changedPaths = contribution.files.map((file) => file.path);
+  const scopedRepository: GitHubRepository = {
+    ...repository,
+    description: null,
+    homepage: null,
+    topics: [],
+    stargazersCount: 0,
+    forksCount: 0,
+    watchersCount: 0,
+    openIssuesCount: 0,
+    size: Math.max(1, Math.ceil(contribution.additions / 20)),
+    language: inferPrimaryLanguage(changedPaths),
+    licenseName: null,
+    pushedAt: contribution.lastCommitAt,
+    archived: false,
+    fork: false,
+  };
+  const analyzedPaths = new Set(admitted.map((file) => file.path));
+  const ignoredCount = contribution.files.filter(
+    (file) => !analyzedPaths.has(file.path),
+  ).length;
+  const analysis = analyzeRepositoryEvidence({
+    repository: scopedRepository,
+    careerPath,
+    files: admitted,
+    totalFiles: contribution.files.length,
+    treePaths: changedPaths,
+    fileReport: {
+      totalFiles: contribution.files.length,
+      analyzedCount: analyzedPaths.size,
+      ignoredCount,
+      files: contribution.files.map((file) => ({
+        path: file.path,
+        status: analyzedPaths.has(file.path) ? 'analyzed' : 'ignored',
+        reason: analyzedPaths.has(file.path)
+          ? `Changed in ${file.commits} verified commit(s) by @${contribution.username}.`
+          : 'No readable added-line patch was available from GitHub.',
+        sizeBytes: null,
+      })),
+      ignoredReasons:
+        ignoredCount > 0
+          ? [
+              {
+                reason:
+                  'Outside the contributed-code content budget or unavailable as text.',
+                count: ignoredCount,
+              },
+            ]
+          : [],
+      ignoredListTruncated: false,
+    },
+    onProgress,
+  });
+
+  return { ...analysis, repository, userContribution: contribution };
+}
+
+function inferPrimaryLanguage(paths: string[]): string | null {
+  const counts = new Map<string, number>();
+  const names: Record<string, string> = {
+    ts: 'TypeScript',
+    tsx: 'TypeScript',
+    js: 'JavaScript',
+    jsx: 'JavaScript',
+    py: 'Python',
+    go: 'Go',
+    java: 'Java',
+    rs: 'Rust',
+    cs: 'C#',
+    cpp: 'C++',
+    cc: 'C++',
+    c: 'C',
+    kt: 'Kotlin',
+    swift: 'Swift',
+    rb: 'Ruby',
+    scala: 'Scala',
+    sql: 'SQL',
+    r: 'R',
+    tf: 'HCL',
+    hcl: 'HCL',
+    sh: 'Shell',
+  };
+  for (const path of paths) {
+    const language = names[path.split('.').at(-1)?.toLowerCase() ?? ''];
+    if (language) counts.set(language, (counts.get(language) ?? 0) + 1);
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 }
 
 /**

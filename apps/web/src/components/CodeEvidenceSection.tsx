@@ -23,8 +23,11 @@ export function CodeEvidenceSection({
   return (
     <div className="grid gap-3">
       <p className="text-sm text-slate-600 dark:text-slate-300">
-        Every fragment below is copied verbatim from a file Proofly downloaded,
-        with the matched line highlighted.
+        Every fragment below is copied verbatim from inspected source
+        {codeEvidence.some((item) => item.commitSha)
+          ? '; fork evidence contains only lines added by the verified user'
+          : ''}
+        , with the matched line highlighted.
       </p>
       {byFile.map(([path, items]) => (
         <Collapsible
@@ -53,6 +56,11 @@ export function CodeEvidenceSection({
                   <span className="text-xs text-slate-500 dark:text-slate-400">
                     lines {evidence.startLine}–{evidence.endLine}
                   </span>
+                  {evidence.commitSha ? (
+                    <span className="text-xs font-mono text-emerald-700 dark:text-emerald-300">
+                      commit {evidence.commitSha.slice(0, 7)}
+                    </span>
+                  ) : null}
                 </div>
 
                 <CodeFragment

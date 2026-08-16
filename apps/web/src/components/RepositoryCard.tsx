@@ -156,6 +156,20 @@ export function RepositoryCard({
           <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
             {repository.description ?? 'No repository description provided.'}
           </p>
+          {repository.fork && repository.userContribution ? (
+            <p
+              className={`mt-2 rounded-xl px-3 py-2 text-xs font-semibold ${
+                repository.userContribution.verified
+                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300'
+                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+              }`}
+            >
+              {repository.userContribution.status}
+              {repository.userContribution.verified
+                ? ` · ${repository.userContribution.fileCount} changed file(s) · +${repository.userContribution.additions}/-${repository.userContribution.deletions}`
+                : ` · ${repository.userContribution.branchesInspected} branch(es) inspected`}
+            </p>
+          ) : null}
         </div>
 
         <div className="flex shrink-0 gap-2">
@@ -240,14 +254,19 @@ export function RepositoryCard({
         <button
           className="rounded-2xl bg-aurora px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-indigo-500 dark:hover:bg-indigo-400"
           type="button"
-          disabled={isRunning}
+          disabled={
+            isRunning ||
+            (repository.fork && !repository.userContribution?.verified)
+          }
           onClick={() => void runAnalysis()}
         >
-          {isRunning
-            ? 'Reading files…'
-            : analysis
-              ? 'Re-run file analysis'
-              : 'Analyze code and score 0–10'}
+          {repository.fork && !repository.userContribution?.verified
+            ? 'No verified contributions'
+            : isRunning
+              ? 'Reading files…'
+              : analysis
+                ? 'Re-run file analysis'
+                : 'Analyze code and score 0–10'}
         </button>
 
         {error ? (

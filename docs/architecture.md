@@ -19,7 +19,8 @@ The first vertical slice intentionally avoids authentication, persistence, Gemin
 1. Enter a GitHub username.
 2. Select a target career.
 3. Fetch public repositories through the backend.
-4. Rank repositories with documented deterministic metadata signals.
+4. Verify fork authorship across all branches, then rank repositories with documented
+   deterministic evidence signals.
 5. Display loading, empty, and error states in a polished frontend.
 
 ## Future analysis pipeline

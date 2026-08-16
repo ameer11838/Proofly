@@ -5,6 +5,8 @@ export interface GitHubOwner {
 }
 
 export interface GitHubUserProfile {
+  /** Stable numeric GitHub account id, when returned by the API. */
+  id?: number;
   login: string;
   name: string | null;
   avatarUrl: string;
@@ -17,6 +19,8 @@ export interface GitHubUserProfile {
   followers: number;
   following: number;
   createdAt: string;
+  /** Public profile email only. GitHub does not expose private addresses here. */
+  email?: string | null;
 }
 
 export interface GitHubRepository {
@@ -41,4 +45,6 @@ export interface GitHubRepository {
   archived: boolean;
   fork: boolean;
   owner: GitHubOwner;
+  /** Present for forks once Proofly has checked the analyzed user's authorship. */
+  userContribution?: import('./contribution.js').UserContributionSummary;
 }

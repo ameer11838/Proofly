@@ -32,6 +32,7 @@ interface GitHubApiRepository {
 }
 
 interface GitHubApiUser {
+  id: number;
   login: string;
   name: string | null;
   avatar_url: string;
@@ -44,6 +45,55 @@ interface GitHubApiUser {
   followers: number;
   following: number;
   created_at: string;
+  email: string | null;
+}
+
+export interface GitHubBranch {
+  name: string;
+  headSha: string;
+}
+
+export interface GitHubCommitSummary {
+  sha: string;
+  htmlUrl: string;
+  message: string;
+  author: { name: string; email: string; date: string } | null;
+  committer: { name: string; email: string; date: string } | null;
+  authorLogin: string | null;
+  parentCount: number;
+}
+
+export interface GitHubCommitFile {
+  filename: string;
+  status: string;
+  additions: number;
+  deletions: number;
+  changes: number;
+  patch: string | null;
+}
+
+export interface GitHubCommitDetail extends GitHubCommitSummary {
+  files: GitHubCommitFile[];
+}
+
+interface GitHubApiCommit {
+  sha: string;
+  html_url: string;
+  commit: {
+    message: string;
+    author: { name: string; email: string; date: string } | null;
+    committer: { name: string; email: string; date: string } | null;
+  };
+  author: { login: string } | null;
+  parents: Array<{ sha: string }>;
+  files?: Array<{
+    filename: string;
+    status: string;
+    additions: number;
+    deletions: number;
+    changes: number;
+    patch?: string;
+  }>;
 }
 
 interface GitHubTreeResponse {
@@ -88,6 +138,7 @@ export class GitHubClient {
     );
 
     return {
+      id: profile.id,
       login: profile.login,
       name: profile.name,
       avatarUrl: profile.avatar_url,
@@ -100,6 +151,7 @@ export class GitHubClient {
       followers: profile.followers,
       following: profile.following,
       createdAt: profile.created_at,
+      email: profile.email,
     };
   }
 
@@ -160,6 +212,105 @@ export class GitHubClient {
     );
 
     return response.text();
+  }
+
+  /** Lists every branch, following GitHub pagination until no page remains. */
+  async listRepositoryBranches(
+    owner: string,
+    repository: string,
+  ): Promise<GitHubBranch[]> {
+    const url = new URL(
+      `https://api.github.com/repos/${owner}/${repository}/branches`,
+    );
+    const branches = await this.requestAllPages<{
+      name: string;
+      commit: { sha: string };
+    }>(url, 'GitHub repository branches were not found.');
+    return branches.map((branch) => ({
+      name: branch.name,
+      headSha: branch.commit.sha,
+    }));
+  }
+
+  /** Lists all commits reachable from a branch that GitHub associates with an author. */
+  async listRepositoryCommitsByAuthor(
+    owner: string,
+    repository: string,
+    branch: string,
+    author: string,
+  ): Promise<GitHubCommitSummary[]> {
+    const url = new URL(
+      `https://api.github.com/repos/${owner}/${repository}/commits`,
+    );
+    url.searchParams.set('sha', branch);
+    url.searchParams.set('author', author);
+    const commits = await this.requestAllPages<GitHubApiCommit>(
+      url,
+      'GitHub repository commits were not found.',
+    );
+    return commits.map(mapCommit);
+  }
+
+  async getRepositoryCommit(
+    owner: string,
+    repository: string,
+    sha: string,
+  ): Promise<GitHubCommitDetail> {
+    const baseUrl = new URL(
+      `https://api.github.com/repos/${owner}/${repository}/commits/${sha}`,
+    );
+    const files: NonNullable<GitHubApiCommit['files']> = [];
+    let commit: GitHubApiCommit | null = null;
+    let page = 1;
+    while (true) {
+      const url = new URL(baseUrl);
+      url.searchParams.set('per_page', '100');
+      url.searchParams.set('page', String(page));
+      const result = await this.requestJson<GitHubApiCommit>(
+        url.toString(),
+        'GitHub commit was not found.',
+      );
+      commit ??= result;
+      const pageFiles = result.files ?? [];
+      files.push(...pageFiles);
+      if (pageFiles.length < 100) break;
+      page += 1;
+    }
+
+    return {
+      ...mapCommit(commit),
+      files: files.map((file) => ({
+        filename: file.filename,
+        status: file.status,
+        additions: file.additions,
+        deletions: file.deletions,
+        changes: file.changes,
+        patch: file.patch ?? null,
+      })),
+    };
+  }
+
+  private async requestAllPages<T>(
+    initialUrl: URL,
+    notFoundMessage: string,
+  ): Promise<T[]> {
+    const results: T[] = [];
+    let page = 1;
+
+    while (true) {
+      const url = new URL(initialUrl);
+      url.searchParams.set('per_page', '100');
+      url.searchParams.set('page', String(page));
+      const values = await this.requestJson<T[]>(
+        url.toString(),
+        notFoundMessage,
+      );
+      results.push(...values);
+      if (values.length < 100) break;
+      page += 1;
+    }
+
+    return results;
   }
 
   private buildHeaders(): HeadersInit {
@@ -240,6 +391,18 @@ export class GitHubClient {
       clearTimeout(timeout);
     }
   }
+}
+
+function mapCommit(commit: GitHubApiCommit): GitHubCommitSummary {
+  return {
+    sha: commit.sha,
+    htmlUrl: commit.html_url,
+    message: commit.commit.message,
+    author: commit.commit.author,
+    committer: commit.commit.committer,
+    authorLogin: commit.author?.login ?? null,
+    parentCount: commit.parents?.length ?? 0,
+  };
 }
 
 function mapRepository(repository: GitHubApiRepository): GitHubRepository {

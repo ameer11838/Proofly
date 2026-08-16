@@ -31,7 +31,7 @@ describe('portfolio progress', () => {
         repository: {
           name: 'old-fork',
           state: 'skipped',
-          reason: 'Fork: the code is someone else’s work.',
+          reason: 'No contributions from this GitHub user were found.',
         },
       },
     ]);

@@ -139,7 +139,7 @@ export function buildCareerPortfolioScore({
     mainGaps: collectGaps(analyses),
     contributors,
     coverage,
-    method: `Every repository is ranked from public metadata, then read file-by-file where GitHub allows it. Each analyzed repository's career evidence strength blends its career relevance (55%) with its engineering evidence (45%). The strongest ${Math.min(
+    method: `Every repository is ranked from public metadata; forks are first verified across every available branch and are ranked and analyzed only from code added in commits attributed to the GitHub user. Each analyzed repository's career evidence strength blends its career relevance (55%) with its engineering evidence (45%). The strongest ${Math.min(
       scoringDepth,
       Math.max(analyzed.length, 1),
     )} then carry the score: influence drops ${Math.round(
@@ -183,6 +183,7 @@ function toContributor(
     strength: strength === null ? null : round1(strength),
     prooflyScore: analysis ? analysis.rating.score : null,
     contribution: round1(contribution * 100) / 100,
+    userContribution: repository.userContribution,
     explanation: explainContribution(
       outcome,
       strength,
@@ -211,7 +212,10 @@ function explainContribution(
 
   if (contribution > 0) {
     const share = Math.round(contribution * 100);
-    return `Carries ${share}% of the portfolio score on ${strength.toFixed(1)}/10 career evidence strength.`;
+    const attribution = outcome.repository.userContribution?.verified
+      ? `${outcome.repository.userContribution.status}. `
+      : '';
+    return `${attribution}Carries ${share}% of the portfolio score on ${strength.toFixed(1)}/10 career evidence strength.`;
   }
 
   const gap = topStrength - strength;
