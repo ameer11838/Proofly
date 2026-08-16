@@ -1,305 +1,327 @@
 import type {
+  AnalysisProgressEvent,
   CareerPath,
+  EngineeringEvidenceReport,
+  FileInspectionReport,
   GitHubRepository,
+  ImprovementPlan,
+  RelevanceBand,
   RepositoryAnalysisFinding,
   RepositoryAnalysisResponse,
+  ScoreBreakdown,
+  ScoreCategory,
+  ScoreCategoryKey,
 } from '@proofly/shared-types';
-import { careerCriteria } from './careerCriteria.js';
+import { getCareerSkillMap } from './careerSkillMap.js';
+import { buildCareerRelevance } from './careerRelevance.js';
+import {
+  extractCodeEvidence,
+  type RepositoryFileEvidence,
+} from './codeEvidence.js';
+import { extractDependencies } from './dependencies.js';
+import {
+  buildScoreBreakdown,
+  categoryWeights,
+  maxScore,
+  sumPoints,
+  type AnalysisContext,
+} from './scoreModel.js';
 
-export interface RepositoryFileEvidence {
-  path: string;
-  size: number;
-  content: string;
-}
+export type { RepositoryFileEvidence } from './codeEvidence.js';
 
 export interface RepositoryAnalysisInput {
   repository: GitHubRepository;
   careerPath: CareerPath;
+  /** Files whose contents were downloaded. */
   files: RepositoryFileEvidence[];
   totalFiles: number;
+  /** Every path in the repository tree, so presence checks are not limited by sampling. */
+  treePaths?: string[];
+  fileReport?: FileInspectionReport;
+  /** Called at each real phase boundary. Never called with estimated values. */
+  onProgress?: (event: AnalysisProgressEvent) => void;
 }
 
-interface ScoredObservation {
-  points: number;
-  maxPoints: number;
-  reason: string;
-}
+const engineeringCategories: ScoreCategoryKey[] = [
+  'documentation',
+  'testing',
+  'ci-automation',
+  'code-structure',
+  'project-completeness',
+];
 
 export function analyzeRepositoryEvidence({
   repository,
   careerPath,
   files,
   totalFiles,
+  treePaths,
+  fileReport,
+  onProgress,
 }: RepositoryAnalysisInput): RepositoryAnalysisResponse {
-  const findings: RepositoryAnalysisFinding[] = [];
-  const observations: ScoredObservation[] = [];
+  const report = onProgress ?? (() => {});
   const paths = files.map((file) => file.path);
   const lowerPaths = paths.map((path) => path.toLowerCase());
+  const allPaths = (treePaths ?? paths).map((path) => path.toLowerCase());
 
-  const readme = files.find((file) => /^readme(\.|$)/i.test(basename(file.path)));
-  if (readme) {
-    const readmeSignals = scoreReadme(readme.content);
-    observations.push({
-      points: readmeSignals.points,
-      maxPoints: 2,
-      reason: readmeSignals.reason,
-    });
-    findings.push({
-      category: 'README and project explanation',
-      importance: readmeSignals.points >= 1.4 ? 'Medium' : 'High',
-      explanation: readmeSignals.explanation,
-      evidence: [{ kind: 'file', label: 'README found', path: readme.path }],
-      recommendation:
-        readmeSignals.points >= 1.4
-          ? 'Keep the README current as the project evolves.'
-          : 'Add setup steps, usage examples, architecture notes, and screenshots or API examples.',
-      careerRelevance: 'A clear README helps reviewers understand the problem, implementation, and tradeoffs quickly.',
-    });
-  } else {
-    observations.push({ points: 0, maxPoints: 2, reason: 'No README was found.' });
-    findings.push({
-      category: 'README and project explanation',
-      importance: 'High',
-      explanation: 'No README was found in the selected repository evidence.',
-      evidence: [{ kind: 'github', label: 'Repository tree did not include a README file' }],
-      recommendation: 'Add a README with purpose, setup, usage, architecture, and next steps.',
-      careerRelevance: 'Portfolio repositories need context so reviewers can evaluate the engineering work.',
+  // The root README is the one a reviewer sees on the repository page; a nested
+  // doc/README is a fallback, not a substitute.
+  const readmes = files.filter((file) =>
+    /^readme(\.|$)/i.test(basename(file.path)),
+  );
+  const readme =
+    readmes.find((file) => !file.path.includes('/')) ??
+    [...readmes].sort((a, b) => depthOf(a.path) - depthOf(b.path))[0] ??
+    null;
+  const workflowFiles = files.filter((file) =>
+    /^\.github\/workflows\/|\.gitlab-ci\.ya?ml$|jenkinsfile$/i.test(file.path),
+  );
+  const dependencies = extractDependencies(files);
+  report({
+    stage: 'extracting-evidence',
+    status: 'active',
+    message: `INSPECTED ${dependencies.length} DECLARED DEPENDENCIES`,
+    counters: { dependencies: dependencies.length },
+  });
+
+  const { skills } = getCareerSkillMap(careerPath);
+  report({
+    stage: 'extracting-evidence',
+    status: 'active',
+    message: `MATCHING TECHNICAL SIGNALS ACROSS ${skills.length} SKILLS...`,
+  });
+
+  const codeEvidence = extractCodeEvidence(
+    repository,
+    files,
+    skills,
+    categoryWeights['career-relevance'],
+  );
+
+  for (const evidence of codeEvidence) {
+    report({
+      stage: 'extracting-evidence',
+      status: 'active',
+      message: `CODE EVIDENCE FOUND: ${evidence.detected.toUpperCase()}`,
+      file: evidence.path,
+      evidence: {
+        label: evidence.skillLabel,
+        detected: evidence.detected,
+        path: evidence.path,
+        startLine: evidence.startLine,
+        endLine: evidence.endLine,
+      },
     });
   }
 
-  const testFiles = lowerPaths.filter(isTestPath);
-  observations.push({
-    points: testFiles.length > 0 ? 1.5 : 0,
-    maxPoints: 1.5,
-    reason:
-      testFiles.length > 0
-        ? `${testFiles.length} test-related file(s) were found.`
-        : 'No test files were found.',
-  });
-  findings.push({
-    category: 'Testing evidence',
-    importance: testFiles.length > 0 ? 'Medium' : 'High',
-    explanation:
-      testFiles.length > 0
-        ? 'The repository includes test-related files, which is useful evidence of validation practice.'
-        : 'The analyzed file set did not include obvious tests.',
-    evidence:
-      testFiles.length > 0
-        ? testFiles.slice(0, 4).map((path) => ({ kind: 'file', label: 'Test-related path', path }))
-        : [{ kind: 'static-analysis', label: 'No test path matched common test patterns' }],
-    recommendation:
-      testFiles.length > 0
-        ? 'Make sure tests are documented and cover important behavior, edge cases, and failure paths.'
-        : 'Add automated tests and document how to run them.',
-    careerRelevance:
-      'Testing is a strong signal for production-minded engineering across software roles.',
+  report({
+    stage: 'extracting-evidence',
+    status: 'complete',
+    message: `${codeEvidence.length} CODE EVIDENCE SIGNAL(S) EXTRACTED`,
+    counters: { evidenceSignals: codeEvidence.length },
   });
 
-  const dependencyFiles = lowerPaths.filter(isDependencyPath);
-  observations.push({
-    points: dependencyFiles.length > 0 ? 1 : 0,
-    maxPoints: 1,
-    reason:
-      dependencyFiles.length > 0
-        ? 'Dependency manifests were found.'
-        : 'No dependency manifest was found.',
+  report({
+    stage: 'career-matching',
+    status: 'active',
+    message: `COMPARING EVIDENCE AGAINST ${skills.length} CAREER SKILLS...`,
   });
 
-  const ciFiles = lowerPaths.filter((path) => path.startsWith('.github/workflows/'));
-  observations.push({
-    points: ciFiles.length > 0 ? 0.8 : 0,
-    maxPoints: 0.8,
-    reason: ciFiles.length > 0 ? 'CI workflow files were found.' : 'No CI workflow files were found.',
-  });
-  findings.push({
-    category: 'CI/CD and automation',
-    importance: ciFiles.length > 0 ? 'Low' : 'Medium',
-    explanation:
-      ciFiles.length > 0
-        ? 'The repository includes GitHub Actions workflow files.'
-        : 'The analyzed tree did not include GitHub Actions workflow files.',
-    evidence:
-      ciFiles.length > 0
-        ? ciFiles.slice(0, 3).map((path) => ({ kind: 'file', label: 'Workflow file', path }))
-        : [{ kind: 'static-analysis', label: 'No .github/workflows files found' }],
-    recommendation:
-      ciFiles.length > 0
-        ? 'Ensure CI runs linting, type checking, tests, and build checks.'
-        : 'Add CI for linting, tests, and builds so quality checks are visible.',
-    careerRelevance: 'Automation shows that the project is maintained like a real engineering system.',
+  const relevance = buildCareerRelevance({
+    repository,
+    careerPath,
+    lowerPaths,
+    dependencies,
+    codeEvidence,
   });
 
-  const envFiles = lowerPaths.filter((path) => path.includes('.env.example'));
-  observations.push({
-    points: envFiles.length > 0 ? 0.7 : 0,
-    maxPoints: 0.7,
-    reason:
-      envFiles.length > 0
-        ? 'Environment variable examples were found.'
-        : 'No .env.example file was found.',
+  const strongSkills = relevance.skills.filter(
+    (skill) => skill.strength === 'strong',
+  );
+  for (const skill of strongSkills) {
+    report({
+      stage: 'career-matching',
+      status: 'active',
+      message: `CAREER SIGNAL DETECTED: ${skill.label.toUpperCase()}`,
+    });
+  }
+
+  report({
+    stage: 'career-matching',
+    status: 'complete',
+    message: `${relevance.score}% CAREER RELEVANCE FROM ${strongSkills.length} STRONG SKILL(S)`,
+    counters: { skillsMatched: strongSkills.length },
   });
 
-  const sourceFiles = lowerPaths.filter(isSourcePath);
-  observations.push({
-    points: Math.min(sourceFiles.length / 8, 1.5),
-    maxPoints: 1.5,
-    reason:
-      sourceFiles.length > 0
-        ? `${sourceFiles.length} source file(s) were sampled.`
-        : 'No source files were sampled.',
+  const context: AnalysisContext = {
+    repository,
+    allPaths,
+    files,
+    lowerPaths,
+    readme,
+    workflowFiles,
+    dependencies,
+    codeEvidence,
+    relevance,
+  };
+
+  report({
+    stage: 'scoring',
+    status: 'active',
+    message: 'SCORING ENGINEERING EVIDENCE ACROSS SIX CATEGORIES...',
   });
 
-  const careerPoints = scoreCareerSpecificEvidence(repository, careerPath, lowerPaths, files);
-  observations.push(careerPoints);
-  findings.push(buildCareerFinding(repository, careerPath, lowerPaths, careerPoints));
+  const { breakdown, improvementPlan } = buildScoreBreakdown(context);
+  const engineering = buildEngineeringReport(breakdown);
 
-  addCodePatternFindings(files, careerPath, findings);
+  report({
+    stage: 'scoring',
+    status: 'complete',
+    message: `PROOFLY SCORE ${breakdown.score.toFixed(1)}/${breakdown.maxScore.toFixed(0)} · ${engineering.score}% ENGINEERING EVIDENCE`,
+  });
 
-  const totalPoints = observations.reduce((sum, observation) => sum + observation.points, 0);
-  const totalMax = observations.reduce((sum, observation) => sum + observation.maxPoints, 0);
-  const score = Math.max(1, Math.min(10, Math.round((totalPoints / totalMax) * 10)));
+  report({
+    stage: 'building-report',
+    status: 'active',
+    message: 'BUILDING PORTFOLIO ASSESSMENT...',
+  });
+
+  const findings = buildFindings(context, breakdown, improvementPlan);
+
+  report({
+    stage: 'building-report',
+    status: 'complete',
+    message: `REPORT READY · ${findings.length} FINDING(S) · ${improvementPlan.actions.length} IMPROVEMENT(S)`,
+  });
 
   return {
     repository,
     careerPath,
     rating: {
-      score,
-      label: ratingLabel(score),
-      summary: summarizeRating(repository, score),
-      reasoning: observations.map((observation) => observation.reason),
+      score: breakdown.score,
+      label: ratingLabel(breakdown.score),
+      summary: summarizeRating(
+        repository,
+        breakdown,
+        engineering,
+        relevance.score,
+        relevance.label,
+      ),
+      reasoning: breakdown.categories.map(
+        (category) =>
+          `${category.label}: ${category.earned.toFixed(1)}/${category.max.toFixed(1)} — ${describeCategory(category)}`,
+      ),
     },
+    breakdown,
+    engineering,
+    careerRelevance: relevance,
+    codeEvidence,
+    improvementPlan,
+    fileReport: fileReport ?? fallbackFileReport(paths, totalFiles, files),
     findings,
-    suggestions: findings
-      .filter((finding) => finding.importance !== 'Low')
-      .map((finding) => finding.recommendation)
-      .slice(0, 6),
+    suggestions: improvementPlan.actions.map((action) => action.detail),
     analyzedFiles: paths,
     ignoredFilesCount: Math.max(0, totalFiles - files.length),
   };
 }
 
-function scoreReadme(content: string): {
-  points: number;
-  reason: string;
-  explanation: string;
-} {
-  const lowerContent = content.toLowerCase();
-  const signals = [
-    lowerContent.includes('install') || lowerContent.includes('setup'),
-    lowerContent.includes('usage') || lowerContent.includes('example'),
-    lowerContent.includes('test') || lowerContent.includes('run'),
-    lowerContent.includes('architecture') || lowerContent.includes('api'),
-  ];
-  const foundSignals = signals.filter(Boolean).length;
-  const points = Math.min(2, 0.6 + foundSignals * 0.35);
+function buildEngineeringReport(
+  breakdown: ScoreBreakdown,
+): EngineeringEvidenceReport {
+  const categories = breakdown.categories.filter((category) =>
+    engineeringCategories.includes(category.key),
+  );
+  const earned = sumPoints(categories.map((category) => category.earned));
+  const max = sumPoints(categories.map((category) => category.max));
+  const score = max > 0 ? Math.round((earned / max) * 100) : 0;
+
+  const weakest = [...categories].sort(
+    (a, b) => a.earned / a.max - b.earned / b.max,
+  )[0];
+  const strongest = [...categories].sort(
+    (a, b) => b.earned / b.max - a.earned / a.max,
+  )[0];
 
   return {
-    points,
-    reason: `README found with ${foundSignals} completeness signal(s).`,
-    explanation:
-      foundSignals >= 3
-        ? 'The README includes multiple useful project explanation signals.'
-        : 'The README exists, but it may not fully explain setup, usage, testing, and architecture.',
+    score,
+    band: toBand(score),
+    summary: `Engineering evidence scores ${earned.toFixed(1)} of ${max.toFixed(1)} points across documentation, testing, automation, structure, and completeness${
+      strongest && weakest && strongest.key !== weakest.key
+        ? `. Strongest area is ${strongest.label.toLowerCase()}, weakest is ${weakest.label.toLowerCase()}`
+        : ''
+    }.`,
+    categories: engineeringCategories,
   };
 }
 
-function scoreCareerSpecificEvidence(
-  repository: GitHubRepository,
-  careerPath: CareerPath,
-  lowerPaths: string[],
-  files: RepositoryFileEvidence[],
-): ScoredObservation {
-  const criteria = careerCriteria[careerPath];
-  const text = [
-    repository.name,
-    repository.description ?? '',
-    repository.language ?? '',
-    ...repository.topics,
-    ...lowerPaths,
-    ...files.map((file) => file.content.slice(0, 1200)),
-  ]
-    .join(' ')
-    .toLowerCase();
+function buildFindings(
+  context: AnalysisContext,
+  breakdown: ScoreBreakdown,
+  improvementPlan: ImprovementPlan,
+): RepositoryAnalysisFinding[] {
+  const findings: RepositoryAnalysisFinding[] = breakdown.categories.map(
+    (category) => {
+      const ratio = category.max > 0 ? category.earned / category.max : 0;
+      const action = improvementPlan.actions.find(
+        (item) => item.category === category.key,
+      );
+      const unmet = category.signals.filter(
+        (signal) => signal.earned < signal.max,
+      );
 
-  const keywordMatches = [...criteria.keywords, ...criteria.topics].filter((keyword) =>
-    text.includes(keyword.toLowerCase()),
+      return {
+        category: category.label,
+        importance: ratio >= 0.75 ? 'Low' : ratio >= 0.4 ? 'Medium' : 'High',
+        explanation: describeCategory(category),
+        evidence: category.signals
+          .flatMap((signal) => signal.evidence)
+          .slice(0, 5),
+        recommendation:
+          action?.detail ??
+          (unmet.length === 0
+            ? `${category.label} is fully credited. Keep it current as the project changes.`
+            : `Close the remaining gap in ${unmet.map((signal) => signal.label.toLowerCase()).join(' and ')}.`),
+        careerRelevance:
+          category.key === 'career-relevance'
+            ? `${context.relevance.label} is scored separately from engineering quality: a strong project can still be a weak match for this career.`
+            : `${category.label} contributes up to ${category.max.toFixed(1)} of the ${maxScore.toFixed(0)} available points for every career path.`,
+      };
+    },
   );
 
-  const languageMatch =
-    repository.language !== null && criteria.languages.includes(repository.language) ? 0.5 : 0;
-  const keywordPoints = Math.min(keywordMatches.length * 0.2, 1);
-
-  return {
-    points: Math.min(1.5, languageMatch + keywordPoints),
-    maxPoints: 1.5,
-    reason:
-      keywordMatches.length > 0
-        ? `Career-specific evidence matched: ${keywordMatches.slice(0, 5).join(', ')}.`
-        : 'No strong career-specific code or metadata signals were found.',
-  };
+  return [...findings, ...codePatternFindings(context)];
 }
 
-function buildCareerFinding(
-  repository: GitHubRepository,
-  careerPath: CareerPath,
-  lowerPaths: string[],
-  observation: ScoredObservation,
-): RepositoryAnalysisFinding {
-  const matchedPaths = lowerPaths.filter((path) =>
-    careerCriteria[careerPath].keywords.some((keyword) => path.includes(keyword.toLowerCase())),
+function describeCategory(category: ScoreCategory): string {
+  const met = category.signals.filter((signal) => signal.earned >= signal.max);
+  const unmet = category.signals.filter((signal) => signal.earned < signal.max);
+
+  if (unmet.length === 0) {
+    return `Every check passed: ${met.map((signal) => signal.label.toLowerCase()).join(', ')}.`;
+  }
+
+  if (met.length === 0) {
+    return `No checks passed. Missing: ${unmet.map((signal) => signal.label.toLowerCase()).join(', ')}.`;
+  }
+
+  return `Credited for ${met.map((signal) => signal.label.toLowerCase()).join(', ')}. Still missing ${unmet
+    .map((signal) => signal.label.toLowerCase())
+    .join(', ')}.`;
+}
+
+/**
+ * Pattern checks that are not part of the score but are worth surfacing. The suspected
+ * secret check reports only the location, never the value.
+ */
+function codePatternFindings(
+  context: AnalysisContext,
+): RepositoryAnalysisFinding[] {
+  const findings: RepositoryAnalysisFinding[] = [];
+
+  const possibleSecret = findFirst(
+    context.files,
+    /(api[_-]?key|secret|token|password)\s*[:=]\s*['"][^'"]{8,}/i,
   );
-
-  return {
-    category: 'Career-path relevance',
-    importance: observation.points >= 1 ? 'Medium' : 'High',
-    explanation: observation.reason,
-    evidence: [
-      {
-        kind: 'github',
-        label: `Primary language: ${repository.language ?? 'unknown'}`,
-      },
-      ...matchedPaths.slice(0, 3).map((path) => ({ kind: 'file' as const, label: 'Relevant path', path })),
-    ],
-    recommendation:
-      observation.points >= 1
-        ? 'Make the career-relevant technical decisions more explicit in the README and docs.'
-        : 'Add role-specific evidence such as tests, architecture notes, API docs, experiments, pipelines, or deployment configuration.',
-    careerRelevance: 'Proofly weights evidence differently depending on the selected target career.',
-  };
-}
-
-function addCodePatternFindings(
-  files: RepositoryFileEvidence[],
-  careerPath: CareerPath,
-  findings: RepositoryAnalysisFinding[],
-): void {
-  const todo = findFirst(files, /\b(TODO|FIXME)\b/i);
-  if (todo) {
-    findings.push({
-      category: 'Code maintainability',
-      importance: 'Low',
-      explanation: 'A TODO/FIXME marker was found in sampled code.',
-      evidence: [{ kind: 'file', label: 'Maintenance marker', path: todo.path, line: todo.line }],
-      recommendation: 'Resolve stale TODOs or turn them into tracked issues with context.',
-      careerRelevance: 'Visible maintenance markers are fine when intentional, but stale ones can weaken portfolio polish.',
-    });
-  }
-
-  const consoleLog = findFirst(files, /\bconsole\.(log|debug)\s*\(/);
-  if (consoleLog) {
-    findings.push({
-      category: 'Debugging and observability',
-      importance: careerPath === 'backend-engineering' ? 'Medium' : 'Low',
-      explanation: 'A console logging/debug statement was found in sampled code.',
-      evidence: [
-        { kind: 'file', label: 'Console logging statement', path: consoleLog.path, line: consoleLog.line },
-      ],
-      recommendation: 'Use structured logging or remove temporary debug logs before presenting the project.',
-      careerRelevance: 'Logging practices matter especially for backend, full-stack, and DevOps-oriented work.',
-    });
-  }
-
-  const possibleSecret = findFirst(files, /(api[_-]?key|secret|token|password)\s*[:=]\s*['"][^'"]{8,}/i);
   if (possibleSecret) {
     findings.push({
       category: 'Security hygiene',
@@ -307,16 +329,91 @@ function addCodePatternFindings(
       explanation:
         'A possible hardcoded secret pattern was detected. Proofly intentionally does not display the suspected value.',
       evidence: [
-        { kind: 'file', label: 'Possible hardcoded secret pattern', path: possibleSecret.path, line: possibleSecret.line },
+        {
+          kind: 'file',
+          label: 'Possible hardcoded secret pattern',
+          path: possibleSecret.path,
+          line: possibleSecret.line,
+        },
       ],
-      recommendation:
-        'Move secrets to environment variables, rotate any exposed credentials, and provide safe .env.example documentation.',
-      careerRelevance: 'Security hygiene is important for every career path and especially backend, cloud, fintech, and cybersecurity roles.',
+      recommendation: `Move the value at ${possibleSecret.path}:${possibleSecret.line} into an environment variable, rotate the credential if it was ever real, and document the key in .env.example.`,
+      careerRelevance:
+        'Security hygiene matters for every path, and disqualifies otherwise strong work in backend, cloud, FinTech, and security roles.',
     });
   }
+
+  const todo = findFirst(context.files, /\b(TODO|FIXME)\b/);
+  if (todo) {
+    findings.push({
+      category: 'Code maintainability',
+      importance: 'Low',
+      explanation: `A TODO or FIXME marker is left in ${todo.path}.`,
+      evidence: [
+        {
+          kind: 'file',
+          label: 'Maintenance marker',
+          path: todo.path,
+          line: todo.line,
+        },
+      ],
+      recommendation: `Resolve the marker at ${todo.path}:${todo.line} or convert it into a tracked issue with context.`,
+      careerRelevance:
+        'Intentional TODOs are fine; stale ones read as abandoned work in a portfolio repository.',
+    });
+  }
+
+  return findings;
 }
 
-function ratingLabel(score: number): RepositoryAnalysisResponse['rating']['label'] {
+function summarizeRating(
+  repository: GitHubRepository,
+  breakdown: ScoreBreakdown,
+  engineering: EngineeringEvidenceReport,
+  relevanceScore: number,
+  relevanceLabel: string,
+): string {
+  const strongest = [...breakdown.categories].sort(
+    (a, b) => b.earned / b.max - a.earned / a.max,
+  )[0];
+
+  return `${repository.name} scores ${breakdown.score.toFixed(1)}/${maxScore.toFixed(0)}: ${engineering.score}% engineering evidence and ${relevanceScore}% ${relevanceLabel.toLowerCase()}${
+    strongest ? `, carried most by ${strongest.label.toLowerCase()}` : ''
+  }. Every point comes from the category breakdown below.`;
+}
+
+function fallbackFileReport(
+  paths: string[],
+  totalFiles: number,
+  files: RepositoryFileEvidence[],
+): FileInspectionReport {
+  const ignoredCount = Math.max(0, totalFiles - files.length);
+
+  return {
+    totalFiles,
+    analyzedCount: paths.length,
+    ignoredCount,
+    files: files.map((file) => ({
+      path: file.path,
+      status: 'analyzed' as const,
+      reason: 'Downloaded and scanned for evidence.',
+      sizeBytes: file.size,
+    })),
+    ignoredReasons:
+      ignoredCount > 0
+        ? [
+            {
+              reason: 'Not selected for content analysis.',
+              count: ignoredCount,
+            },
+          ]
+        : [],
+    ignoredListTruncated: ignoredCount > 0,
+  };
+}
+
+function ratingLabel(
+  score: number,
+): RepositoryAnalysisResponse['rating']['label'] {
   if (score >= 8) {
     return 'Excellent';
   }
@@ -329,32 +426,22 @@ function ratingLabel(score: number): RepositoryAnalysisResponse['rating']['label
   return 'Early';
 }
 
-function summarizeRating(repository: GitHubRepository, score: number): string {
-  return `${repository.name} currently earns a ${score}/10 repository evidence rating based on sampled files, project structure, documentation, testing, automation, and career-specific signals.`;
+function toBand(score: number): RelevanceBand {
+  if (score >= 60) {
+    return 'Strong';
+  }
+  if (score >= 30) {
+    return 'Moderate';
+  }
+  return 'Limited';
 }
 
 function basename(path: string): string {
   return path.split('/').at(-1) ?? path;
 }
 
-function isTestPath(path: string): boolean {
-  return /(^|\/)(__tests__|test|tests|spec)(\/|\.|-|_)/.test(path) || /\.(test|spec)\.[cm]?[jt]sx?$/.test(path);
-}
-
-function isDependencyPath(path: string): boolean {
-  return [
-    'package.json',
-    'requirements.txt',
-    'pyproject.toml',
-    'pom.xml',
-    'build.gradle',
-    'cargo.toml',
-    'go.mod',
-  ].some((name) => path.endsWith(name));
-}
-
-function isSourcePath(path: string): boolean {
-  return /\.(ts|tsx|js|jsx|py|go|java|rs|cs|cpp|c|sql|ipynb)$/.test(path);
+function depthOf(path: string): number {
+  return path.split('/').length;
 }
 
 function findFirst(

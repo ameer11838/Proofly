@@ -1,3 +1,8 @@
+import type {
+  EvidenceReference,
+  EvidenceStrength,
+  RelevanceBand,
+} from './analysis.js';
 import type { CareerPath } from './career.js';
 import type { GitHubRepository, GitHubUserProfile } from './github.js';
 
@@ -12,11 +17,39 @@ export interface RepoRankEvidence {
   value: string;
 }
 
+/**
+ * One weighted component of the ranking score, so a repository's position can be
+ * reconstructed from its parts.
+ */
+export interface RankComponent {
+  label: string;
+  earned: number;
+  max: number;
+  detail: string;
+}
+
+export interface RankedSkillMatch {
+  id: string;
+  label: string;
+  strength: EvidenceStrength;
+  matchedSignals: string[];
+}
+
 export interface RankedRepository {
   repository: GitHubRepository;
   relevanceScore: number;
   relevanceLabel: 'High' | 'Medium' | 'Low';
   evidence: RepoRankEvidence[];
+  components: RankComponent[];
+  /** Career-relevance share of the ranking score, 0-100. */
+  careerRelevanceScore: number;
+  careerRelevanceBand: RelevanceBand;
+  /** Skills the repository metadata supports, strongest first. */
+  topSkills: RankedSkillMatch[];
+  strongestEvidence: RepoRankEvidence | null;
+  /** Short explanation of why this repository sits where it does. */
+  whyThisRanks: string;
+  sources: EvidenceReference[];
 }
 
 export interface RepositoryListResponse {
@@ -24,39 +57,6 @@ export interface RepositoryListResponse {
   careerPath: CareerPath;
   profile: GitHubUserProfile;
   repositories: RankedRepository[];
-}
-
-export interface EvidenceReference {
-  kind: 'github' | 'file' | 'static-analysis';
-  label: string;
-  path?: string;
-  line?: number;
-}
-
-export interface RepositoryAnalysisFinding {
-  category: string;
-  importance: 'High' | 'Medium' | 'Low';
-  explanation: string;
-  evidence: EvidenceReference[];
-  recommendation: string;
-  careerRelevance: string;
-}
-
-export interface RepositoryEvidenceRating {
-  score: number;
-  label: 'Excellent' | 'Strong' | 'Developing' | 'Early';
-  summary: string;
-  reasoning: string[];
-}
-
-export interface RepositoryAnalysisResponse {
-  repository: GitHubRepository;
-  careerPath: CareerPath;
-  rating: RepositoryEvidenceRating;
-  findings: RepositoryAnalysisFinding[];
-  suggestions: string[];
-  analyzedFiles: string[];
-  ignoredFilesCount: number;
 }
 
 export interface ApiErrorResponse {

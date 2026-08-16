@@ -1,4 +1,7 @@
-import type { GitHubRepository, GitHubUserProfile } from '@proofly/shared-types';
+import type {
+  GitHubRepository,
+  GitHubUserProfile,
+} from '@proofly/shared-types';
 
 interface GitHubApiRepository {
   id: number;
@@ -113,7 +116,10 @@ export class GitHubClient {
     return repositories.map(mapRepository);
   }
 
-  async getRepository(owner: string, repository: string): Promise<GitHubRepository> {
+  async getRepository(
+    owner: string,
+    repository: string,
+  ): Promise<GitHubRepository> {
     const result = await this.requestJson<GitHubApiRepository>(
       `https://api.github.com/repos/${owner}/${repository}`,
       'GitHub repository was not found.',
@@ -122,8 +128,14 @@ export class GitHubClient {
     return mapRepository(result);
   }
 
-  async getRepositoryTree(owner: string, repository: string, ref: string): Promise<GitHubTreeItem[]> {
-    const url = new URL(`https://api.github.com/repos/${owner}/${repository}/git/trees/${ref}`);
+  async getRepositoryTree(
+    owner: string,
+    repository: string,
+    ref: string,
+  ): Promise<GitHubTreeItem[]> {
+    const url = new URL(
+      `https://api.github.com/repos/${owner}/${repository}/git/trees/${ref}`,
+    );
     url.searchParams.set('recursive', '1');
 
     const result = await this.requestJson<GitHubTreeResponse>(
@@ -134,7 +146,12 @@ export class GitHubClient {
     return result.tree;
   }
 
-  async getRawFile(owner: string, repository: string, ref: string, path: string): Promise<string> {
+  async getRawFile(
+    owner: string,
+    repository: string,
+    ref: string,
+    path: string,
+  ): Promise<string> {
     const encodedPath = path.split('/').map(encodeURIComponent).join('/');
     const encodedRef = encodeURIComponent(ref);
     const response = await this.request(
@@ -159,12 +176,18 @@ export class GitHubClient {
     return headers;
   }
 
-  private async requestJson<T>(url: string, notFoundMessage: string): Promise<T> {
+  private async requestJson<T>(
+    url: string,
+    notFoundMessage: string,
+  ): Promise<T> {
     const response = await this.request(url, notFoundMessage);
     return response.json() as Promise<T>;
   }
 
-  private async request(url: string, notFoundMessage: string): Promise<Response> {
+  private async request(
+    url: string,
+    notFoundMessage: string,
+  ): Promise<Response> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
 
@@ -201,10 +224,18 @@ export class GitHubClient {
       }
 
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new GitHubClientError('GitHub request timed out.', 504, 'GITHUB_TIMEOUT');
+        throw new GitHubClientError(
+          'GitHub request timed out.',
+          504,
+          'GITHUB_TIMEOUT',
+        );
       }
 
-      throw new GitHubClientError('Unable to reach GitHub.', 502, 'GITHUB_NETWORK_ERROR');
+      throw new GitHubClientError(
+        'Unable to reach GitHub.',
+        502,
+        'GITHUB_NETWORK_ERROR',
+      );
     } finally {
       clearTimeout(timeout);
     }

@@ -9,4 +9,10 @@
 
 body {
   margin: 0;
+  /* Painted so overscroll past the app surface matches the active theme. */
+  background-color: #f8fafc;
+}
+
+.dark body {
+  background-color: #020617;
 }

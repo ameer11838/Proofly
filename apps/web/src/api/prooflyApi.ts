@@ -1,10 +1,12 @@
 import type {
   CareerPath,
+  CareerScoreResponse,
   RepositoryAnalysisResponse,
   RepositoryListResponse,
 } from '@proofly/shared-types';
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000';
+export const apiBaseUrl =
+  import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000';
 
 export async function fetchRankedRepositories(
   username: string,
@@ -14,7 +16,8 @@ export async function fetchRankedRepositories(
     `${apiBaseUrl}/api/github/users/${encodeURIComponent(username)}/repos?careerPath=${careerPath}`,
   );
 
-  const body = (await response.json()) as RepositoryListResponse | { error?: { message?: string } };
+  const body = (await response.json()) as
+    RepositoryListResponse | { error?: { message?: string } };
 
   if (!response.ok) {
     const errorMessage = 'error' in body ? body.error?.message : undefined;
@@ -22,6 +25,27 @@ export async function fetchRankedRepositories(
   }
 
   return body as RepositoryListResponse;
+}
+
+export async function fetchCareerScore(
+  username: string,
+  careerPath: CareerPath,
+): Promise<CareerScoreResponse> {
+  const response = await fetch(
+    `${apiBaseUrl}/api/github/users/${encodeURIComponent(username)}/career-score?careerPath=${careerPath}`,
+  );
+
+  const body = (await response.json()) as
+    CareerScoreResponse | { error?: { message?: string } };
+
+  if (!response.ok) {
+    const errorMessage = 'error' in body ? body.error?.message : undefined;
+    throw new Error(
+      errorMessage ?? 'Unable to build a portfolio career score.',
+    );
+  }
+
+  return body as CareerScoreResponse;
 }
 
 export async function fetchRepositoryAnalysis(
@@ -34,8 +58,7 @@ export async function fetchRepositoryAnalysis(
   );
 
   const body = (await response.json()) as
-    | RepositoryAnalysisResponse
-    | { error?: { message?: string } };
+    RepositoryAnalysisResponse | { error?: { message?: string } };
 
   if (!response.ok) {
     const errorMessage = 'error' in body ? body.error?.message : undefined;
