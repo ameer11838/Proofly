@@ -31,9 +31,7 @@ export function HomePage() {
       <section className="mx-auto max-w-6xl">
         <nav className="mb-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="grid size-11 place-items-center rounded-2xl bg-slate-950 text-lg font-black text-white">
-              P
-            </div>
+            <img className="size-11 object-contain" src="/proofly-logo.svg" alt="Proofly logo" />
             <div>
               <p className="text-lg font-bold">Proofly</p>
               <p className="text-xs uppercase tracking-[0.24em] text-slate-500">portfolio evidence</p>

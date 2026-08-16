@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Proofly">
+  <title>Proofly</title>
+  <defs>
+    <linearGradient id="pl-body" x1="412" y1="104" x2="150" y2="428" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3BA2FF" />
+      <stop offset=".42" stop-color="#2563EB" />
+      <stop offset=".78" stop-color="#5B2BE0" />
+      <stop offset="1" stop-color="#8B31F0" />
+    </linearGradient>
+    <linearGradient id="pl-well" x1="218" y1="160" x2="340" y2="386" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#111B36" />
+      <stop offset="1" stop-color="#070B18" />
+    </linearGradient>
+    <linearGradient id="pl-fold" x1="176" y1="0" x2="218" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#000" stop-opacity="0" />
+      <stop offset="1" stop-color="#000" stop-opacity=".38" />
+    </linearGradient>
+    <linearGradient id="pl-gloss" x1="0" y1="104" x2="0" y2="232" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff" stop-opacity=".14" />
+      <stop offset="1" stop-color="#fff" stop-opacity="0" />
+    </linearGradient>
+    <clipPath id="pl-clip">
+      <path d="M196 104H300C373 104 412 155 412 216C412 277 373 328 300 328H218V402A26 26 0 0 1 192 428H166A26 26 0 0 1 140 402V168Z" />
+    </clipPath>
+  </defs>
+
+  <!-- P body: chamfered top-left "fold" corner, rounded stem foot -->
+  <path
+    d="M196 104H300C373 104 412 155 412 216C412 277 373 328 300 328H218V402A26 26 0 0 1 192 428H166A26 26 0 0 1 140 402V168Z"
+    fill="url(#pl-body)"
+  />
+
+  <!-- depth: shadow down the stem's right edge + gloss across the top -->
+  <g clip-path="url(#pl-clip)">
+    <rect x="176" y="96" width="42" height="344" fill="url(#pl-fold)" />
+    <rect x="130" y="96" width="292" height="136" fill="url(#pl-gloss)" />
+  </g>
+
+  <!-- counter of the bowl, continuing into the ribbon tail -->
+  <path d="M218 160H300C345 160 362 186 362 218C362 250 345 276 300 276H268L218 386Z" fill="url(#pl-well)" />
+
+  <!-- </> -->
+  <g fill="none" stroke="#5AACFF" stroke-width="13" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M259 200L237 219L259 238" />
+    <path d="M305 200L327 219L305 238" />
+    <path d="M292 192L270 250" />
+  </g>
+
+  <!-- circuit traces through the stem -->
+  <g clip-path="url(#pl-clip)" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="#A78BFA">
+      <path d="M190 250v52l14 14v76" />
+      <path d="M174 270v64l14 14v52" />
+    </g>
+    <g stroke="#7DD3FC">
+      <path d="M158 302v58l14 14v56" />
+      <path d="M200 350v16l10 10v44" />
+      <path d="M155 386v26" />
+    </g>
+    <g stroke="none">
+      <circle cx="190" cy="250" r="5.5" fill="#C4B5FD" />
+      <circle cx="174" cy="270" r="5.5" fill="#C4B5FD" />
+      <circle cx="158" cy="302" r="5.5" fill="#7DD3FC" />
+      <circle cx="200" cy="350" r="5.5" fill="#7DD3FC" />
+      <circle cx="155" cy="386" r="5.5" fill="#7DD3FC" />
+    </g>
+  </g>
+</svg>
