@@ -118,6 +118,26 @@ export async function analyzeRepositoryFromGitHub(
     message: `METADATA OK · ${repository.language ?? 'UNKNOWN LANGUAGE'} · DEFAULT BRANCH ${repository.defaultBranch}`,
     stageProgress: 0.5,
   });
+
+  // Commit history is supporting evidence rather than a prerequisite for code analysis.
+  // If GitHub cannot return it, the report says it was unavailable and the core workflow
+  // continues with the repository source.
+  const commitHistory = await client
+    .listRepositoryCommitsByAuthor(owner, repo, repository.defaultBranch, owner)
+    .then((commits) =>
+      commits
+        .filter((commit) => commit.parentCount <= 1)
+        .map((commit) => ({
+          sha: commit.sha,
+          message: commit.message,
+          committedAt:
+            commit.author?.date ??
+            commit.committer?.date ??
+            repository.createdAt,
+          htmlUrl: commit.htmlUrl,
+        })),
+    )
+    .catch(() => []);
   report({
     stage: 'fetching-repository',
     status: 'active',
@@ -288,6 +308,8 @@ export async function analyzeRepositoryFromGitHub(
     totalFiles: blobs.length,
     treePaths: blobs.map((item) => item.path),
     fileReport,
+    commitHistory,
+    commitHistoryScope: `default branch (${repository.defaultBranch})`,
     onProgress,
   });
 }
@@ -377,6 +399,16 @@ function analyzeVerifiedContribution(
           : [],
       ignoredListTruncated: false,
     },
+    commitHistory: contribution.commits.map((commit) => ({
+      sha: commit.sha,
+      message: commit.message,
+      committedAt: commit.committedAt,
+      htmlUrl: commit.htmlUrl,
+      additions: commit.additions,
+      deletions: commit.deletions,
+      changedFiles: commit.changedFiles,
+    })),
+    commitHistoryScope: `all ${contribution.branchesInspected} inspected branches`,
     onProgress,
   });
 

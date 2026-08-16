@@ -17,13 +17,13 @@ export function FileInspector({ report, repository }: FileInspectorProps) {
 
   return (
     <div className="grid gap-3">
-      <p className="text-sm text-slate-600 dark:text-slate-300">
+      <p className="text-sm text-[var(--muted)]">
         Proofly read {report.analyzedCount} of the {report.totalFiles} files in
         the repository tree. Everything below is what the score was actually
         computed from.
       </p>
 
-      <div className="flex w-fit gap-1 rounded-full bg-slate-100 dark:bg-slate-800 p-1">
+      <div className="flex w-fit gap-1 border-b border-[var(--border)]">
         <TabButton
           active={tab === 'analyzed'}
           onClick={() => setTab('analyzed')}
@@ -39,26 +39,24 @@ export function FileInspector({ report, repository }: FileInspectorProps) {
         <ul className="grid gap-1.5">
           {report.ignoredReasons.map((entry) => (
             <li key={entry.reason} className="flex gap-3 text-sm">
-              <span className="w-10 shrink-0 text-right font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+              <span className="w-10 shrink-0 text-right font-mono font-semibold tabular-nums text-[var(--text)]">
                 {entry.count}
               </span>
-              <span className="text-slate-600 dark:text-slate-300">
-                {entry.reason}
-              </span>
+              <span className="text-[var(--muted)]">{entry.reason}</span>
             </li>
           ))}
         </ul>
       ) : null}
 
-      <ul className="max-h-72 overflow-y-auto rounded-2xl bg-slate-50 dark:bg-slate-800/60 p-2">
+      <ul className="max-h-72 divide-y divide-[var(--border)] overflow-y-auto border-y border-[var(--border)]">
         {files.map((file) => (
           <li
             key={file.path}
-            className="grid gap-0.5 rounded-xl px-3 py-2 hover:bg-white dark:hover:bg-slate-800"
+            className="grid gap-0.5 px-2 py-2.5 transition hover:bg-[var(--surface-subtle)]"
           >
             <div className="flex items-baseline justify-between gap-3">
               <a
-                className="truncate font-mono text-xs text-slate-900 dark:text-slate-100 hover:text-aurora dark:hover:text-indigo-300"
+                className="truncate font-mono text-xs text-[var(--text)] hover:text-[var(--accent)]"
                 href={`${repository.htmlUrl}/blob/${repository.defaultBranch}/${file.path}`}
                 target="_blank"
                 rel="noreferrer"
@@ -66,20 +64,18 @@ export function FileInspector({ report, repository }: FileInspectorProps) {
                 {file.path}
               </a>
               {file.sizeBytes !== null ? (
-                <span className="shrink-0 text-xs tabular-nums text-slate-400 dark:text-slate-500">
+                <span className="shrink-0 font-mono text-xs tabular-nums text-[var(--muted)]">
                   {formatBytes(file.sizeBytes)}
                 </span>
               ) : null}
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              {file.reason}
-            </p>
+            <p className="text-xs text-[var(--muted)]">{file.reason}</p>
           </li>
         ))}
       </ul>
 
       {tab === 'ignored' && report.ignoredListTruncated ? (
-        <p className="text-xs text-slate-400 dark:text-slate-500">
+        <p className="text-xs text-[var(--muted)]">
           Showing the first {files.length} ignored files. The counts above cover
           all {report.ignoredCount}.
         </p>
@@ -102,10 +98,10 @@ function TabButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+      className={`focus-control border-b-2 px-3 py-2 font-mono text-xs font-semibold transition ${
         active
-          ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-slate-100'
-          : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+          ? 'border-[var(--accent)] text-[var(--text)]'
+          : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]'
       }`}
     >
       {children}

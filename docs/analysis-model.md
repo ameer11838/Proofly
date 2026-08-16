@@ -43,32 +43,48 @@ words such as `src`, `module`, or `cli` are never treated as career evidence.
 
 ## The Proofly score (0-10)
 
-The score is the sum of six weighted categories. Category points are expressed directly on
+The score is the sum of five portfolio-focused categories. Category points are expressed directly on
 the 0-10 scale, so the breakdown always adds up to the score with nothing unexplained.
 
-| Category             | Weight   |
-| -------------------- | -------- |
-| Documentation        | 2.0      |
-| Testing              | 1.8      |
-| CI/CD and automation | 1.2      |
-| Code structure       | 1.8      |
-| Career relevance     | 2.2      |
-| Project completeness | 1.0      |
-| **Total**            | **10.0** |
+| Category                | Weight   |
+| ----------------------- | -------- |
+| Technical Skills        | 3.0      |
+| Career Relevance        | 2.5      |
+| Creativity & Complexity | 2.0      |
+| Project Quality         | 1.5      |
+| Presentation            | 1.0      |
+| **Total**               | **10.0** |
 
 Each category is itself the sum of its signals, and every signal carries the observation it
 was derived from. All values are whole tenths, so the arithmetic is exact rather than
 approximately correct.
 
-## Engineering evidence and career relevance are separate
+Testing, CI/CD, documentation, error handling, architecture, structure, and completeness
+remain visible as supporting checks. Tests and CI contribute only inside Project Quality;
+missing them prevents full quality credit without overwhelming stronger implementation
+evidence.
 
-- **Engineering evidence** (0-100%) rolls up the five engineering categories.
+## Project strength and career relevance are separate
+
+- **Project strength** (0-100%) rolls up Technical Skills, Creativity & Complexity, Project
+  Quality, and Presentation.
 - **Career relevance** (0-100%) is the weighted share of the selected career's skill map that
   the repository can prove, reported as "<Career> relevance".
 
 They move independently on purpose. A well-engineered project can be a weak match for a
 career, and a strong career match can be poorly engineered. Only the career-relevance
-category feeds the selected career into the score.
+category feeds the selected career into the score. Portfolio weighting uses the same 75%
+project-strength / 25% career-relevance split as the repository score.
+
+## Rating calibration
+
+| Score | Rating      | Intended interpretation                                    |
+| ----- | ----------- | ---------------------------------------------------------- |
+| 1–2   | Starting    | Very small, basic, or substantially incomplete work        |
+| 3–4   | Developing  | Some real implementation, but limited depth or completion  |
+| 5–6   | Solid       | A legitimate working student or early-career project       |
+| 7–8   | Strong      | Resume-worthy evidence with meaningful depth and relevance |
+| 9–10  | Exceptional | Unusually deep, relevant, complex, and polished work       |
 
 ## Career skill maps
 
@@ -91,11 +107,36 @@ fork, the fragment is drawn from added lines in a verified commit and links to t
 Fragments are never synthesized, never whole files, and are skipped for comment-only lines,
 manifests, lock files, and generated or minified files.
 
+## Code quality and readability
+
+Proofly runs conservative static checks over the source files it actually downloaded. The
+separate 0–10 Code Quality assessment reports Readability, Modularity, Error handling,
+Documentation, and Maintainability. Its findings cover observable signals such as bounded or
+long functions, dense branching, module size, repeated implementation blocks, vague naming,
+type bypasses, boundary validation, explicit or silenced error paths, response validation,
+configuration, SQL interpolation, risky dynamic execution, TODO/FIXME markers, and whether
+non-obvious logic has useful decision context.
+
+Every strength and improvement includes a file, line range, verbatim fragment, rationale,
+and specific next step. Pattern matches are deliberately described as what Proofly observed
+(for example, “no response check was found nearby”), not as unprovable runtime behavior.
+Code-quality findings deepen Technical Skills feedback but do not change the five category
+weights or manufacture score points.
+
+## Development activity
+
+Commit history is limited to commits GitHub attributes to the analyzed account. Fork reports
+reuse the all-branch identity audit; owned repositories inspect the default branch. Proofly
+reports descriptive versus vague subjects, active days, unusually large commits when diff
+statistics are available, and recent activity. Commit count is context only: the application
+never recommends artificial commits or awards points merely for increasing the count.
+
 ## Improvement plan
 
-Improvements are derived from unearned signal points, so the projected score is arithmetic
-rather than a promise: the plan can only offer points the model is currently withholding, and
-lists the specific files or missing infrastructure behind each one.
+Scored improvements are derived from unearned signal points, so the projected score is
+arithmetic rather than a promise. Source-quality improvements carry no invented point value;
+they are prioritized separately by severity, include affected paths, and explain a concrete
+approach. Quick wins are separated from higher-impact engineering work.
 
 ## File sampling
 

@@ -60,19 +60,19 @@ function analysis(
       maxScore: 10,
       categories: [
         {
-          key: 'documentation',
-          label: 'Documentation',
+          key: 'technical-skills',
+          label: 'Technical Skills',
           description: '',
-          earned: 1.8,
-          max: 2,
+          earned: 2.4,
+          max: 3,
           signals: [],
         },
         {
-          key: 'testing',
-          label: 'Testing',
+          key: 'project-quality',
+          label: 'Project Quality',
           description: '',
-          earned: 0.2,
-          max: 1.8,
+          earned: 0.8,
+          max: 1.5,
           signals: [],
         },
       ],
@@ -113,6 +113,26 @@ function analysis(
       ],
     },
     codeEvidence: [],
+    codeQuality: {
+      score: 6,
+      summary: '',
+      dimensions: [],
+      findings: [],
+    },
+    developmentActivity: {
+      scope: 'default branch',
+      commitCount: 0,
+      meaningfulCommitCount: 0,
+      weakMessageCount: 0,
+      largeCommitCount: 0,
+      activeDays: 0,
+      firstCommitAt: null,
+      lastCommitAt: null,
+      recentDevelopment: false,
+      label: 'No attributable commits available',
+      summary: '',
+      commits: [],
+    },
     improvementPlan: {
       currentScore: prooflyScore,
       potentialScore: 9,
@@ -250,7 +270,7 @@ describe('buildCareerPortfolioScore', () => {
     // Reported on a 0-10 scale, as the contributions table displays them.
     expect(strongest?.careerRelevance).toBe(9);
     expect(strongest?.engineering).toBe(8.5);
-    expect(strongest?.strength).toBeCloseTo(8.8, 1);
+    expect(strongest?.strength).toBeCloseTo(8.6, 1);
 
     const fork = result.contributors.find((entry) => entry.name === 'forked');
     expect(fork?.status).toBe('skipped');
@@ -341,18 +361,18 @@ describe('buildCareerPortfolioScore', () => {
     expect(result.label).toBe('Overall FinTech score');
     expect(result.strongestEvidence).toContain('TypeScript');
     expect(result.strongestEvidence).toContain('Component architecture');
-    expect(result.mainGaps).toContain('testing');
+    expect(result.mainGaps).toContain('project quality');
     expect(result.mainGaps).toContain('accessibility');
     expect(result.disclaimer).toMatch(/not a hiring score/i);
   });
 
-  it('blends career relevance and engineering evidence', () => {
+  it('aligns portfolio strength with the 25/75 career and project split', () => {
     expect(careerEvidenceStrength(analysis('a', 100, 0, 5))).toBeCloseTo(
-      5.5,
+      2.5,
       5,
     );
     expect(careerEvidenceStrength(analysis('b', 0, 100, 5))).toBeCloseTo(
-      4.5,
+      7.5,
       5,
     );
   });

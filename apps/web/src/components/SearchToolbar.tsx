@@ -20,27 +20,28 @@ export function SearchToolbar({
   isLoading,
 }: SearchToolbarProps) {
   return (
-    <form
-      className="rounded-[1.75rem] border border-white/80 bg-white/85 p-6 shadow-soft backdrop-blur lg:p-7 dark:border-slate-800 dark:bg-slate-900/80"
-      onSubmit={onSubmit}
-    >
+    <form className="surface p-5 sm:p-6" onSubmit={onSubmit}>
+      <div className="mb-5 flex items-center justify-between border-b border-[var(--border)] pb-3">
+        <p className="section-kicker">Analysis input</p>
+        <span className="technical-label">Source / GitHub</span>
+      </div>
       {/* Full-width fields: side-by-side columns truncated longer career labels such as
           "DevOps and cloud engineering" at this card width. */}
       <div className="grid gap-4">
         <div className="grid gap-1.5">
           <label
-            className="text-[0.8125rem] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+            className="technical-label font-semibold"
             htmlFor="github-username"
           >
             GitHub username
           </label>
           <div className="relative">
-            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-base text-slate-400 dark:text-slate-500">
+            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 font-mono text-sm text-[var(--muted)]">
               @
             </span>
             <input
               id="github-username"
-              className="w-full rounded-2xl border border-slate-200 bg-white py-3.5 pl-9 pr-4 text-base font-medium text-slate-900 shadow-sm outline-none transition placeholder:font-normal placeholder:text-slate-400 hover:border-slate-300 focus:border-aurora focus:ring-4 focus:ring-indigo-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-indigo-400 dark:focus:ring-indigo-500/25"
+              className="focus-control w-full rounded-[7px] border border-[var(--border)] bg-[var(--surface-subtle)] py-3 pl-8 pr-4 font-mono text-sm font-medium text-[var(--text)] outline-none transition placeholder:font-normal placeholder:text-[var(--muted)] hover:border-[var(--border-strong)]"
               placeholder="octocat"
               autoComplete="off"
               spellCheck={false}
@@ -54,14 +55,14 @@ export function SearchToolbar({
       </div>
 
       <button
-        className="mt-4 h-[54px] w-full rounded-2xl bg-slate-950 px-7 text-base font-semibold text-white shadow-lg shadow-slate-300/60 transition hover:bg-aurora disabled:cursor-not-allowed disabled:opacity-50 dark:bg-indigo-500 dark:shadow-indigo-950/50 dark:hover:bg-indigo-400"
+        className="primary-action focus-control mt-4 h-12 w-full px-7 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
         disabled={isLoading || username.trim().length === 0}
         type="submit"
       >
         {isLoading ? 'Reading GitHub…' : 'Rank repositories'}
       </button>
 
-      <p className="mt-4 text-sm leading-6 text-slate-500 dark:text-slate-400">
+      <p className="mt-4 border-t border-[var(--border)] pt-4 text-xs leading-5 text-[var(--muted)]">
         Ranking reads public repository metadata. For forks, Proofly also
         verifies the user’s commits across every branch before any work counts.
       </p>

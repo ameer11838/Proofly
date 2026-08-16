@@ -7,11 +7,16 @@ export default {
     extend: {
       colors: {
         ink: '#111827',
-        aurora: '#6D5DF6',
+        aurora: '#0969DA',
         cyanMist: '#DDFBFF',
       },
+      fontSize: {
+        xs: ['0.8125rem', { lineHeight: '1.25rem' }],
+        sm: ['0.9375rem', { lineHeight: '1.5rem' }],
+        base: ['1rem', { lineHeight: '1.625rem' }],
+      },
       boxShadow: {
-        soft: '0 24px 80px rgba(15, 23, 42, 0.12)',
+        soft: '0 1px 2px rgba(15, 23, 42, 0.06)',
       },
       keyframes: {
         // Light sweeping across the progress bar, suggesting an active read.

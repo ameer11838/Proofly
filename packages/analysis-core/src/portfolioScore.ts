@@ -139,7 +139,7 @@ export function buildCareerPortfolioScore({
     mainGaps: collectGaps(analyses),
     contributors,
     coverage,
-    method: `Every repository is ranked from public metadata; forks are first verified across every available branch and are ranked and analyzed only from code added in commits attributed to the GitHub user. Each analyzed repository's career evidence strength blends its career relevance (55%) with its engineering evidence (45%). The strongest ${Math.min(
+    method: `Every repository is ranked from public metadata; forks are first verified across every available branch and are ranked and analyzed only from code added in commits attributed to the GitHub user. Each analyzed repository's strength follows the same project model: technical skills (30%), career relevance (25%), creativity and complexity (20%), project quality (15%), and presentation (10%). The strongest ${Math.min(
       scoringDepth,
       Math.max(analyzed.length, 1),
     )} then carry the score: influence drops ${Math.round(
@@ -151,16 +151,16 @@ export function buildCareerPortfolioScore({
 }
 
 /**
- * Blends how well a repository matches the career with how well it is engineered. Career
- * relevance leads because this is a career score, but an irrelevant-but-polished repository
- * and a relevant-but-sloppy one both land mid-range.
+ * Reconstructs the repository's overall strength from career relevance (25%) and the
+ * normalized non-career project categories (75%). This keeps portfolio weighting aligned
+ * with the five-category repository score instead of grading engineering hygiene twice.
  */
 export function careerEvidenceStrength(
   analysis: RepositoryAnalysisResponse,
 ): number {
   const relevance = analysis.careerRelevance.score / 10;
   const engineering = analysis.engineering.score / 10;
-  return 0.55 * relevance + 0.45 * engineering;
+  return 0.25 * relevance + 0.75 * engineering;
 }
 
 function toContributor(

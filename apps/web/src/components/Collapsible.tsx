@@ -21,16 +21,16 @@ export function Collapsible({
 }: CollapsibleProps) {
   return (
     <details
-      className="group border-t border-slate-200/80 py-4 first:border-t-0 dark:border-slate-800"
+      className="group my-3 overflow-hidden rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-subtle)] transition-colors open:border-[var(--border-strong)] open:bg-[var(--surface)]"
       open={defaultOpen}
     >
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-xl px-1 py-1 outline-none hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-aurora dark:hover:bg-slate-800/60">
+      <summary className="focus-control flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 outline-none transition hover:bg-[var(--surface-raised)]">
         <span className="flex min-w-0 flex-col">
-          <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+          <span className="text-base font-bold text-[var(--text)] group-hover:text-[var(--accent)]">
             {title}
           </span>
           {summary ? (
-            <span className="truncate text-xs text-slate-500 dark:text-slate-400">
+            <span className="mt-0.5 text-sm leading-5 text-[var(--muted)]">
               {summary}
             </span>
           ) : null}
@@ -38,7 +38,7 @@ export function Collapsible({
         <span className="flex shrink-0 items-center gap-3">
           {badge}
           <svg
-            className="size-4 text-slate-400 transition-transform group-open:rotate-180 dark:text-slate-500"
+            className="size-5 text-[var(--muted)] transition-transform duration-200 group-open:rotate-180 group-hover:text-[var(--accent)]"
             viewBox="0 0 16 16"
             fill="none"
             aria-hidden="true"
@@ -53,7 +53,9 @@ export function Collapsible({
           </svg>
         </span>
       </summary>
-      <div className="mt-3 px-1">{children}</div>
+      <div className="border-t border-[var(--border)] px-4 py-4">
+        {children}
+      </div>
     </details>
   );
 }

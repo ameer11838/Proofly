@@ -17,16 +17,13 @@ export function CareerSelect({
 }: CareerSelectProps) {
   return (
     <div className="grid gap-1.5">
-      <label
-        className="text-[0.8125rem] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-        htmlFor={id}
-      >
+      <label className="technical-label font-semibold" htmlFor={id}>
         Target career
       </label>
       <div className="relative">
         <select
           id={id}
-          className="w-full appearance-none rounded-2xl border border-slate-200 bg-white py-3.5 pl-4 pr-10 text-base font-medium text-slate-900 shadow-sm outline-none transition hover:border-slate-300 focus:border-aurora focus:ring-4 focus:ring-indigo-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:border-slate-600 dark:focus:border-indigo-400 dark:focus:ring-indigo-500/25"
+          className="focus-control w-full appearance-none rounded-[7px] border border-[var(--border)] bg-[var(--surface-subtle)] py-3 pl-3.5 pr-10 text-sm font-medium text-[var(--text)] outline-none transition hover:border-[var(--border-strong)]"
           value={value}
           onChange={(event) => onChange(event.target.value as CareerPath)}
         >
@@ -34,7 +31,7 @@ export function CareerSelect({
             <optgroup
               key={group.label}
               label={group.label}
-              className="bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100"
+              className="bg-[var(--surface)] text-[var(--text)]"
             >
               {group.careerPaths.map((careerPath) => (
                 <option key={careerPath} value={careerPath}>
@@ -45,7 +42,7 @@ export function CareerSelect({
           ))}
         </select>
         <svg
-          className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+          className="pointer-events-none absolute right-3.5 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]"
           viewBox="0 0 16 16"
           fill="none"
           aria-hidden="true"

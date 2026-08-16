@@ -3,10 +3,14 @@ import type {
   RepositoryAnalysisResponse,
 } from '@proofly/shared-types';
 import { CareerRelevanceSection } from './CareerRelevanceSection.js';
+import { AnalysisNavigation } from './AnalysisNavigation.js';
+import { AnalysisOverview } from './AnalysisOverview.js';
 import { CodeEvidenceSection } from './CodeEvidenceSection.js';
+import { CodeQualitySection } from './CodeQualitySection.js';
 import { Collapsible } from './Collapsible.js';
 import { FileInspector } from './FileInspector.js';
 import { ImprovementSection } from './ImprovementSection.js';
+import { DevelopmentActivitySection } from './DevelopmentActivitySection.js';
 import { ScoreBreakdownSection } from './ScoreBreakdownSection.js';
 
 interface AnalysisPanelProps {
@@ -20,17 +24,21 @@ export function AnalysisPanel({ analysis }: AnalysisPanelProps) {
     engineering,
     careerRelevance,
     codeEvidence,
+    codeQuality,
+    developmentActivity,
     improvementPlan,
     fileReport,
   } = analysis;
   const strongSkills = careerRelevance.skills.filter(
     (skill) => skill.strength === 'strong',
   ).length;
+  const navigationPrefix = `analysis-${analysis.repository.id}`;
+  const sectionId = (key: string) => `${navigationPrefix}-${key}`;
 
   return (
-    <div className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+    <div className="mt-5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)]">
       {analysis.userContribution ? (
-        <div className="border-b border-emerald-200 bg-emerald-50 px-6 py-3 text-sm text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200">
+        <div className="border-b border-[var(--border)] bg-[var(--success-soft)] px-6 py-3 font-mono text-xs text-[var(--success)]">
           <span className="font-semibold">
             {analysis.userContribution.status}
           </span>
@@ -41,33 +49,37 @@ export function AnalysisPanel({ analysis }: AnalysisPanelProps) {
           </span>
         </div>
       ) : null}
+      <AnalysisNavigation prefix={navigationPrefix} />
       {/* 1. The score itself, and what it is made of. */}
-      <div className="border-b border-slate-200 dark:border-slate-800 bg-gradient-to-br from-slate-950 to-indigo-950 px-6 py-6 text-white">
+      <div
+        id={sectionId('overview')}
+        className="scroll-mt-14 border-b border-[var(--border)] bg-[var(--surface-strong)] px-6 py-7 text-[var(--text)]"
+      >
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-indigo-300">
-              Proofly score
+            <p className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-[var(--accent)]">
+              03 / Evidence · Proofly score
             </p>
             <p className="mt-1 flex items-baseline gap-2">
               <span className="text-5xl font-black tracking-tight">
                 {rating.score.toFixed(1)}
               </span>
-              <span className="text-lg font-semibold text-slate-400">
+              <span className="text-lg font-semibold text-[var(--muted)]">
                 / {breakdown.maxScore.toFixed(0)}
               </span>
-              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide">
+              <span className="rounded-[5px] border border-[var(--border-strong)] bg-[var(--surface)] px-2.5 py-1 font-mono text-xs font-semibold uppercase tracking-wide">
                 {rating.label}
               </span>
             </p>
           </div>
 
-          {/* 2. Engineering quality and career fit, deliberately reported apart. */}
+          {/* 2. Project strength and career fit, deliberately reported apart. */}
           <div className="grid gap-3 sm:grid-cols-2">
             <StatTile
-              label="Engineering evidence"
+              label="Project strength"
               value={`${engineering.score}%`}
               band={engineering.band}
-              caption="Docs, tests, CI, structure, completeness"
+              caption="Technical depth, complexity, quality, presentation"
             />
             <StatTile
               label={careerRelevance.label}
@@ -78,76 +90,97 @@ export function AnalysisPanel({ analysis }: AnalysisPanelProps) {
           </div>
         </div>
 
-        <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-300">
+        <p className="mt-5 max-w-3xl text-base font-medium leading-7 text-[var(--text)]">
           {rating.summary}
         </p>
-        <p className="mt-2 max-w-3xl text-xs leading-5 text-slate-300/80">
-          These two measures move independently: a well-built project can be a
-          weak match for this career, and a strong career match can still be
-          poorly engineered.
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">
+          These measures answer different questions: project strength captures
+          what was built and how convincingly it is presented, while career
+          relevance measures fit for the selected path.
         </p>
       </div>
 
+      <AnalysisOverview analysis={analysis} />
+
       <div className="px-6 py-2">
         {/* 3-7. Progressive detail, collapsed by default apart from the breakdown. */}
-        <Collapsible
-          title="Score breakdown"
-          summary="How the six categories add up to the score"
-          defaultOpen
-          badge={
-            <span className="text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-              {breakdown.score.toFixed(1)}/{breakdown.maxScore.toFixed(0)}
-            </span>
-          }
-        >
-          <ScoreBreakdownSection breakdown={breakdown} />
-        </Collapsible>
-
-        <Collapsible
-          title={careerRelevance.label}
-          summary="Which career skills the repository can actually prove"
-          badge={
-            <span className="flex items-center gap-2">
-              <Badge band={careerRelevance.band} tone="light">
-                {careerRelevance.band}
-              </Badge>
-              <span className="text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-                {careerRelevance.score}%
+        <div id={sectionId('scores')} className="scroll-mt-14">
+          <Collapsible
+            title="Score breakdown"
+            summary="How the five portfolio-focused categories add up to the score"
+            badge={
+              <span className="font-mono text-xs font-semibold tabular-nums text-[var(--text)]">
+                {breakdown.score.toFixed(1)}/{breakdown.maxScore.toFixed(0)}
               </span>
-            </span>
-          }
-        >
-          <CareerRelevanceSection relevance={careerRelevance} />
-        </Collapsible>
+            }
+          >
+            <ScoreBreakdownSection breakdown={breakdown} />
+          </Collapsible>
+        </div>
+
+        <div id={sectionId('career')} className="scroll-mt-14">
+          <Collapsible
+            title={careerRelevance.label}
+            summary="Which career skills the repository can actually prove"
+            badge={
+              <span className="flex items-center gap-2">
+                <Badge band={careerRelevance.band} tone="light">
+                  {careerRelevance.band}
+                </Badge>
+                <span className="font-mono text-xs font-semibold tabular-nums text-[var(--text)]">
+                  {careerRelevance.score}%
+                </span>
+              </span>
+            }
+          >
+            <CareerRelevanceSection relevance={careerRelevance} />
+          </Collapsible>
+        </div>
+
+        <div id={sectionId('quality')} className="scroll-mt-14">
+          <Collapsible
+            title="Code Readability & Documentation"
+            summary="Readability, modularity, error handling, documentation, and maintainability"
+            badge={
+              <span className="font-mono text-xs font-semibold text-[var(--text)]">
+                {codeQuality.score.toFixed(1)}/10
+              </span>
+            }
+          >
+            <CodeQualitySection report={codeQuality} />
+          </Collapsible>
+        </div>
 
         <Collapsible
           title="Key findings"
           summary="One finding per scored category, plus hygiene checks"
           badge={
-            <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-300">
+            <span className="font-mono text-xs font-semibold text-[var(--muted)]">
               {analysis.findings.length}
             </span>
           }
         >
-          <ul className="grid gap-2">
+          <ul className="grid gap-3">
             {analysis.findings.map((finding) => (
               <li
                 key={`${finding.category}-${finding.explanation}`}
-                className="rounded-2xl bg-slate-50 dark:bg-slate-800/60 px-4 py-3"
+                className={`rounded-[var(--radius-sm)] border-l-4 px-4 py-4 ${findingBackground(finding.category, finding.importance)}`}
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  <p className="text-base font-bold text-[var(--text)]">
                     {finding.category}
                   </p>
                   <span className={importanceClassName(finding.importance)}>
                     {finding.importance}
                   </span>
                 </div>
-                <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
                   {finding.explanation}
                 </p>
-                <p className="mt-1 text-sm leading-6 text-slate-700 dark:text-slate-200">
-                  <span className="font-medium">Recommendation:</span>{' '}
+                <p className="mt-3 text-sm leading-6 text-[var(--text)]">
+                  <span className="font-bold text-[var(--warning)]">
+                    Recommendation:
+                  </span>{' '}
                   {finding.recommendation}
                 </p>
               </li>
@@ -155,39 +188,65 @@ export function AnalysisPanel({ analysis }: AnalysisPanelProps) {
           </ul>
         </Collapsible>
 
-        <Collapsible
-          title="Code evidence"
-          summary="Actual lines from the repository that triggered a detection"
-          badge={
-            <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-300">
-              {codeEvidence.length}
-            </span>
-          }
-        >
-          <CodeEvidenceSection codeEvidence={codeEvidence} />
-        </Collapsible>
+        <div id={sectionId('evidence')} className="scroll-mt-14">
+          <Collapsible
+            title="Code evidence"
+            summary="Interactive source-backed strengths, career evidence, and improvements"
+            badge={
+              <span className="font-mono text-xs font-semibold text-[var(--muted)]">
+                {codeEvidence.length + codeQuality.findings.length}
+              </span>
+            }
+          >
+            <CodeEvidenceSection
+              codeEvidence={codeEvidence}
+              qualityFindings={codeQuality.findings}
+            />
+          </Collapsible>
+        </div>
 
-        <Collapsible
-          title="Improve this repo"
-          summary={`${improvementPlan.currentScore.toFixed(1)} → ${improvementPlan.potentialScore.toFixed(1)} if every action below is done`}
-          badge={
-            <span className="rounded-full bg-aurora/10 dark:bg-indigo-500/20 px-2.5 py-1 text-xs font-bold text-aurora dark:text-indigo-300">
-              +
-              {(
-                improvementPlan.potentialScore - improvementPlan.currentScore
-              ).toFixed(1)}
-            </span>
-          }
-        >
-          <ImprovementSection plan={improvementPlan} />
-        </Collapsible>
+        <div id={sectionId('commits')} className="scroll-mt-14">
+          <Collapsible
+            title="Development activity"
+            summary="Attributable commit history and message quality"
+            badge={
+              <span className="font-mono text-xs font-semibold text-[var(--text)]">
+                {developmentActivity.commitCount} commits
+              </span>
+            }
+          >
+            <DevelopmentActivitySection activity={developmentActivity} />
+          </Collapsible>
+        </div>
 
-        <Collapsible
-          title="Files Proofly inspected"
-          summary={`${fileReport.analyzedCount} analyzed · ${fileReport.ignoredCount} ignored`}
-        >
-          <FileInspector report={fileReport} repository={analysis.repository} />
-        </Collapsible>
+        <div id={sectionId('improvements')} className="scroll-mt-14">
+          <Collapsible
+            title="Improve this repo"
+            summary="Prioritized, evidence-backed improvements and quick wins"
+            badge={
+              <span className="font-mono text-xs font-bold text-[var(--accent)]">
+                {improvementPlan.actions.length}
+              </span>
+            }
+          >
+            <div>
+              <p className="section-kicker mb-3">04 / Improvements</p>
+              <ImprovementSection plan={improvementPlan} />
+            </div>
+          </Collapsible>
+        </div>
+
+        <div id={sectionId('files')} className="scroll-mt-14">
+          <Collapsible
+            title="Files Proofly inspected"
+            summary={`${fileReport.analyzedCount} analyzed · ${fileReport.ignoredCount} ignored`}
+          >
+            <FileInspector
+              report={fileReport}
+              repository={analysis.repository}
+            />
+          </Collapsible>
+        </div>
       </div>
     </div>
   );
@@ -205,15 +264,15 @@ function StatTile({
   caption: string;
 }) {
   return (
-    <div className="min-w-48 rounded-2xl bg-white/10 px-4 py-3 backdrop-blur">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-300">
+    <div className="min-w-48 border-l border-[var(--border)] px-4 py-1 first:border-l-0">
+      <p className="font-mono text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
         {label}
       </p>
-      <p className="mt-0.5 flex items-baseline gap-2">
+      <p className="mt-1 flex items-baseline gap-2">
         <span className="text-2xl font-bold">{value}</span>
         <Badge band={band}>{band}</Badge>
       </p>
-      <p className="mt-1 text-xs leading-4 text-slate-300/90">{caption}</p>
+      <p className="mt-1 text-sm leading-5 text-[var(--muted)]">{caption}</p>
     </div>
   );
 }
@@ -229,20 +288,20 @@ function Badge({
 }) {
   const colors: Record<'dark' | 'light', Record<RelevanceBand, string>> = {
     dark: {
-      Strong: 'bg-emerald-400/20 text-emerald-300',
-      Moderate: 'bg-amber-400/20 text-amber-200',
-      Limited: 'bg-slate-400/20 text-slate-300',
+      Strong: 'bg-[var(--success-soft)] text-[var(--success)]',
+      Moderate: 'bg-[var(--warning-soft)] text-[var(--warning)]',
+      Limited: 'bg-[var(--surface-raised)] text-[var(--muted)]',
     },
     light: {
-      Strong: 'bg-emerald-100 text-emerald-700',
-      Moderate: 'bg-amber-100 text-amber-700',
-      Limited: 'bg-slate-200 text-slate-600',
+      Strong: 'bg-[var(--success-soft)] text-[var(--success)]',
+      Moderate: 'bg-[var(--warning-soft)] text-[var(--warning)]',
+      Limited: 'bg-[var(--surface-raised)] text-[var(--muted)]',
     },
   };
 
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${colors[tone][band]}`}
+      className={`rounded-[5px] px-2 py-0.5 font-mono text-xs font-semibold uppercase ${colors[tone][band]}`}
     >
       {children}
     </span>
@@ -250,15 +309,29 @@ function Badge({
 }
 
 function importanceClassName(importance: 'High' | 'Medium' | 'Low'): string {
-  const base = 'rounded-full px-2 py-0.5 text-xs font-semibold';
+  const base =
+    'rounded-[5px] px-2 py-0.5 font-mono text-xs font-semibold uppercase';
 
   if (importance === 'High') {
-    return `${base} bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300`;
+    return `${base} bg-[var(--warning-soft)] text-[var(--warning)]`;
   }
 
   if (importance === 'Medium') {
-    return `${base} bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300`;
+    return `${base} bg-[var(--warning-soft)] text-[var(--warning)]`;
   }
 
-  return `${base} bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300`;
+  return `${base} bg-[var(--surface-subtle)] text-[var(--muted)]`;
+}
+
+function findingBackground(
+  category: string,
+  importance: 'High' | 'Medium' | 'Low',
+): string {
+  if (/security/i.test(category) && importance === 'High') {
+    return 'border-[var(--error)] bg-[var(--error-soft)]';
+  }
+  if (importance === 'High' || importance === 'Medium') {
+    return 'border-[var(--warning)] bg-[var(--warning-soft)]';
+  }
+  return 'border-[var(--success)] bg-[var(--success-soft)]';
 }

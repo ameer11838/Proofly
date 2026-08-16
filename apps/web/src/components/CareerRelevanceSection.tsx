@@ -34,9 +34,7 @@ export function CareerRelevanceSection({
 }: CareerRelevanceSectionProps) {
   return (
     <div className="grid gap-4">
-      <p className="text-sm text-slate-600 dark:text-slate-300">
-        {relevance.summary}
-      </p>
+      <p className="text-sm text-[var(--muted)]">{relevance.summary}</p>
 
       {groups.map((group) => {
         const skills = relevance.skills.filter(
@@ -50,21 +48,19 @@ export function CareerRelevanceSection({
         return (
           <section key={group.strength}>
             <div className="flex flex-wrap items-baseline gap-x-2">
-              <h4 className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
+              <h4 className="flex items-center gap-2 text-sm font-semibold text-[var(--text)]">
                 <span
                   className={`size-2 rounded-full ${dotColor(group.strength)}`}
                   aria-hidden="true"
                 />
                 {group.title}
-                <span className="font-normal text-slate-500 dark:text-slate-400">
+                <span className="font-mono text-xs font-normal text-[var(--muted)]">
                   ({skills.length})
                 </span>
               </h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {group.blurb}
-              </p>
+              <p className="text-xs text-[var(--muted)]">{group.blurb}</p>
             </div>
-            <ul className="mt-2 grid gap-2 md:grid-cols-2">
+            <ul className="mt-2 grid border-y border-[var(--border)] md:grid-cols-2">
               {skills.map((skill) => (
                 <SkillCard key={skill.id} skill={skill} />
               ))}
@@ -78,30 +74,24 @@ export function CareerRelevanceSection({
 
 function SkillCard({ skill }: { skill: SkillEvidence }) {
   return (
-    <li className={`rounded-2xl px-4 py-3 ring-1 ${cardColor(skill.strength)}`}>
+    <li
+      className={`border-b border-[var(--border)] px-3 py-4 md:odd:border-r ${cardColor(skill.strength)}`}
+    >
       <div className="flex items-baseline justify-between gap-2">
-        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+        <p className="text-sm font-semibold text-[var(--text)]">
           {skill.label}
         </p>
-        <span className="shrink-0 text-xs text-slate-500 dark:text-slate-400">
+        <span className="technical-label shrink-0 normal-case tracking-normal">
           weight {skill.weight}
         </span>
       </div>
-      <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300">
-        {skill.description}
-      </p>
+      <p className="mt-0.5 text-xs text-[var(--muted)]">{skill.description}</p>
 
       {skill.matchedSignals.length > 0 ? (
         <ul className="mt-2 grid gap-1">
           {skill.matchedSignals.slice(0, 3).map((signal) => (
-            <li
-              key={signal}
-              className="text-xs text-slate-700 dark:text-slate-200"
-            >
-              <span
-                className="text-emerald-600 dark:text-emerald-400"
-                aria-hidden="true"
-              >
+            <li key={signal} className="text-xs text-[var(--text)]">
+              <span className="text-[var(--success)]" aria-hidden="true">
                 ✓
               </span>{' '}
               {signal}
@@ -110,7 +100,7 @@ function SkillCard({ skill }: { skill: SkillEvidence }) {
         </ul>
       ) : null}
 
-      <p className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">
+      <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
         {skill.rationale}
       </p>
     </li>
@@ -119,24 +109,24 @@ function SkillCard({ skill }: { skill: SkillEvidence }) {
 
 function dotColor(strength: EvidenceStrength): string {
   if (strength === 'strong') {
-    return 'bg-emerald-500';
+    return 'bg-[var(--success)]';
   }
 
   if (strength === 'moderate') {
-    return 'bg-amber-500';
+    return 'bg-[var(--warning)]';
   }
 
-  return 'bg-slate-300 dark:bg-slate-600';
+  return 'bg-[var(--border-strong)]';
 }
 
 function cardColor(strength: EvidenceStrength): string {
   if (strength === 'strong') {
-    return 'bg-emerald-50/60 ring-emerald-100 dark:bg-emerald-500/10 dark:ring-emerald-500/25';
+    return 'bg-[var(--success-soft)]/40';
   }
 
   if (strength === 'moderate') {
-    return 'bg-amber-50/60 ring-amber-100 dark:bg-amber-500/10 dark:ring-amber-500/25';
+    return 'bg-[var(--warning-soft)]/40';
   }
 
-  return 'bg-slate-50 ring-slate-200 dark:bg-slate-800/60 dark:ring-slate-700';
+  return 'bg-[var(--surface-subtle)]';
 }

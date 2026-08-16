@@ -37,20 +37,20 @@ const analysis: RepositoryAnalysisResponse = {
   careerPath: 'quantitative-development',
   rating: {
     score: 3.5,
-    label: 'Early',
+    label: 'Developing',
     summary: 'vol-surface scores 3.5/10.',
-    reasoning: ['Documentation: 0.6/2.0 — README present.'],
+    reasoning: ['Presentation: 0.6/1.0 — README present.'],
   },
   breakdown: {
     score: 3.5,
     maxScore: 10,
     categories: [
       {
-        key: 'documentation',
-        label: 'Documentation',
+        key: 'presentation',
+        label: 'Presentation',
         description: 'Can a reader understand this project?',
         earned: 0.6,
-        max: 2,
+        max: 1,
         signals: [
           {
             label: 'README present',
@@ -73,13 +73,12 @@ const analysis: RepositoryAnalysisResponse = {
   engineering: {
     score: 28,
     band: 'Limited',
-    summary: 'Engineering evidence scores 2.2 of 7.8 points.',
+    summary: 'Project strength scores 2.2 of 7.5 points.',
     categories: [
-      'documentation',
-      'testing',
-      'ci-automation',
-      'code-structure',
-      'project-completeness',
+      'technical-skills',
+      'creativity-complexity',
+      'project-quality',
+      'presentation',
     ],
   },
   careerRelevance: {
@@ -138,6 +137,53 @@ const analysis: RepositoryAnalysisResponse = {
         'https://github.com/q/vol-surface/blob/main/src/backtest.py#L3-L5',
     },
   ],
+  codeQuality: {
+    score: 6.4,
+    summary: 'Two sampled source files were inspected.',
+    dimensions: [
+      {
+        key: 'readability',
+        label: 'Readability',
+        score: 6.4,
+        summary: 'One supported strength.',
+        findingIds: ['quality-readable'],
+      },
+    ],
+    findings: [
+      {
+        id: 'quality-readable',
+        kind: 'strength',
+        severity: 'Low',
+        dimension: 'readability',
+        path: 'src/backtest.py',
+        startLine: 3,
+        endLine: 5,
+        matchOffset: 2,
+        language: 'python',
+        fragment,
+        title: 'Focused function',
+        found: 'The function has one clear responsibility.',
+        why: 'Focused functions are easier to test and maintain.',
+        suggestion: 'Preserve this boundary.',
+        githubUrl:
+          'https://github.com/q/vol-surface/blob/main/src/backtest.py#L3-L5',
+      },
+    ],
+  },
+  developmentActivity: {
+    scope: 'default branch (main)',
+    commitCount: 3,
+    meaningfulCommitCount: 2,
+    weakMessageCount: 1,
+    largeCommitCount: 0,
+    activeDays: 2,
+    firstCommitAt: '2026-07-01T00:00:00Z',
+    lastCommitAt: '2026-08-01T00:00:00Z',
+    recentDevelopment: true,
+    label: 'Development history is difficult to follow',
+    summary: '3 attributable commits across 2 active days.',
+    commits: [],
+  },
   improvementPlan: {
     currentScore: 3.5,
     potentialScore: 7.2,
@@ -148,7 +194,7 @@ const analysis: RepositoryAnalysisResponse = {
         title: 'Add automated tests',
         detail:
           'The repository contains substantial logic in src/surface.py, but no test file was detected.',
-        category: 'testing',
+        category: 'project-quality',
         points: 0.8,
       },
     ],
@@ -197,7 +243,7 @@ describe('AnalysisPanel', () => {
 
     expect(screen.getAllByText(/proofly score/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText('3.5').length).toBeGreaterThan(0);
-    expect(screen.getByText('Engineering evidence')).toBeInTheDocument();
+    expect(screen.getByText('Project strength')).toBeInTheDocument();
     expect(screen.getByText('28%')).toBeInTheDocument();
     expect(
       screen.getAllByText('Quantitative development relevance').length,
@@ -208,8 +254,8 @@ describe('AnalysisPanel', () => {
   it('shows the category breakdown adding up to the score', () => {
     render(<AnalysisPanel analysis={analysis} />);
 
-    expect(screen.getByText('Documentation')).toBeInTheDocument();
-    expect(screen.getByText('0.6/2.0')).toBeInTheDocument();
+    expect(screen.getByText('Presentation')).toBeInTheDocument();
+    expect(screen.getByText('0.6/1.0')).toBeInTheDocument();
     expect(screen.getByText('Total')).toBeInTheDocument();
   });
 
@@ -217,14 +263,14 @@ describe('AnalysisPanel', () => {
     render(<AnalysisPanel analysis={analysis} />);
 
     await userEvent.click(screen.getByText('Code evidence'));
-    await userEvent.click(screen.getByText('src/backtest.py'));
+    await userEvent.click(screen.getAllByText('src/backtest.py')[1]!);
 
     // Line numbers start at the fragment's real position in the file.
-    expect(screen.getByText('3')).toBeInTheDocument();
-    expect(screen.getByText('5')).toBeInTheDocument();
-    expect(screen.getByText(/pct_change/)).toBeInTheDocument();
+    expect(screen.getAllByText('3').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('5').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/pct_change/).length).toBeGreaterThan(0);
     expect(
-      screen.getByRole('link', { name: /view on github/i }),
+      screen.getAllByRole('link', { name: /open file on github/i })[0],
     ).toHaveAttribute(
       'href',
       'https://github.com/q/vol-surface/blob/main/src/backtest.py#L3-L5',
@@ -236,8 +282,10 @@ describe('AnalysisPanel', () => {
 
     await userEvent.click(screen.getByText('Improve this repo'));
 
-    expect(screen.getByText('+0.8')).toBeInTheDocument();
-    expect(screen.getByText('Add automated tests')).toBeInTheDocument();
+    expect(screen.getByText(/\+0\.8/)).toBeInTheDocument();
+    expect(screen.getAllByText('Add automated tests').length).toBeGreaterThan(
+      0,
+    );
     expect(screen.getAllByText(/src\/surface\.py/).length).toBeGreaterThan(0);
   });
 

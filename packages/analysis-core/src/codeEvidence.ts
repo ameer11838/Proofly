@@ -49,8 +49,8 @@ const engineeringSignalGroups: { owner: SignalOwner; signals: CodeSignal[] }[] =
       owner: {
         skillId: 'testing',
         skillLabel: 'Automated testing',
-        category: 'testing',
-        scoreImpact: 'Counts toward the Testing category.',
+        category: 'project-quality',
+        scoreImpact: 'Supports testing within the Project Quality category.',
       },
       signals: [
         {
@@ -73,8 +73,8 @@ const engineeringSignalGroups: { owner: SignalOwner; signals: CodeSignal[] }[] =
       owner: {
         skillId: 'ci-pipeline',
         skillLabel: 'CI/CD automation',
-        category: 'ci-automation',
-        scoreImpact: 'Counts toward the CI/CD and automation category.',
+        category: 'project-quality',
+        scoreImpact: 'Supports automation within the Project Quality category.',
       },
       signals: [
         {
@@ -89,8 +89,9 @@ const engineeringSignalGroups: { owner: SignalOwner; signals: CodeSignal[] }[] =
       owner: {
         skillId: 'error-handling',
         skillLabel: 'Error handling',
-        category: 'code-structure',
-        scoreImpact: 'Counts toward the Code structure category.',
+        category: 'project-quality',
+        scoreImpact:
+          'Supports reliability within the Project Quality category.',
       },
       signals: [
         {
@@ -111,8 +112,9 @@ const engineeringSignalGroups: { owner: SignalOwner; signals: CodeSignal[] }[] =
       owner: {
         skillId: 'input-validation',
         skillLabel: 'Input validation',
-        category: 'code-structure',
-        scoreImpact: 'Counts toward the Code structure category.',
+        category: 'project-quality',
+        scoreImpact:
+          'Supports maintainability within the Project Quality category.',
       },
       signals: [
         {
@@ -127,8 +129,9 @@ const engineeringSignalGroups: { owner: SignalOwner; signals: CodeSignal[] }[] =
       owner: {
         skillId: 'configuration',
         skillLabel: 'Configuration management',
-        category: 'project-completeness',
-        scoreImpact: 'Counts toward the Project completeness category.',
+        category: 'project-quality',
+        scoreImpact:
+          'Supports completeness within the Project Quality category.',
       },
       signals: [
         {

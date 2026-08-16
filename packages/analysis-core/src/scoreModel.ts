@@ -15,31 +15,30 @@ import type { RepositoryFileEvidence } from './codeEvidence.js';
 import type { DependencyRecord } from './dependencies.js';
 
 /**
- * Category weights, in points on the 0-10 Proofly scale. These sum to `maxScore`,
- * so the six categories always account for the whole score with nothing left over.
+ * Category weights, in points on the 0-10 Proofly scale. Actual implementation and
+ * career fit deliberately dominate repository hygiene for portfolio-oriented scoring.
  */
 export const categoryWeights: Record<ScoreCategoryKey, number> = {
-  documentation: 2,
-  testing: 1.8,
-  'ci-automation': 1.2,
-  'code-structure': 1.8,
-  'career-relevance': 2.2,
-  'project-completeness': 1,
+  'technical-skills': 3,
+  'career-relevance': 2.5,
+  'creativity-complexity': 2,
+  'project-quality': 1.5,
+  presentation: 1,
 };
 
 export const maxScore = sumPoints(Object.values(categoryWeights));
 
 const categoryDescriptions: Record<ScoreCategoryKey, string> = {
-  documentation:
-    'Can a reader understand what this project is, how to run it, and how it is built?',
-  testing: 'Is the behaviour verified by tests that actually run?',
-  'ci-automation': 'Do quality checks run automatically on every change?',
-  'code-structure':
-    'Is the code organised, defensive, and readable at the module level?',
+  'technical-skills':
+    'How much meaningful technical implementation, breadth, and depth does the code demonstrate?',
   'career-relevance':
-    'How much of the selected career’s skill map does this repository demonstrate?',
-  'project-completeness':
-    'Is this a finished, maintained project rather than an abandoned scratch pad?',
+    'How strongly does the actual project evidence match the selected career?',
+  'creativity-complexity':
+    'Does the project solve a meaningful problem and combine enough moving parts to go beyond a basic tutorial?',
+  'project-quality':
+    'Is the work organized, maintainable, complete, and supported by reliability practices appropriate to its scope?',
+  presentation:
+    'Can a reviewer quickly understand the project, run it, and see what was built?',
 };
 
 export interface AnalysisContext {
@@ -83,12 +82,14 @@ export function buildScoreBreakdown(context: AnalysisContext): {
   improvementPlan: ImprovementPlan;
 } {
   const groups: { key: ScoreCategoryKey; signals: BuiltSignal[] }[] = [
-    { key: 'documentation', signals: documentationSignals(context) },
-    { key: 'testing', signals: testingSignals(context) },
-    { key: 'ci-automation', signals: ciSignals(context) },
-    { key: 'code-structure', signals: codeStructureSignals(context) },
+    { key: 'technical-skills', signals: technicalSkillsSignals(context) },
     { key: 'career-relevance', signals: careerRelevanceSignals(context) },
-    { key: 'project-completeness', signals: completenessSignals(context) },
+    {
+      key: 'creativity-complexity',
+      signals: creativityComplexitySignals(context),
+    },
+    { key: 'project-quality', signals: projectQualitySignals(context) },
+    { key: 'presentation', signals: presentationSignals(context) },
   ];
 
   const categories: ScoreCategory[] = groups.map(({ key, signals }) => ({
@@ -122,6 +123,15 @@ function buildImprovementPlan(
           detail: entry.improvement?.detail ?? '',
           category: key,
           points: round1(entry.signal.max - entry.signal.earned),
+          paths: [
+            ...new Set(
+              entry.signal.evidence
+                .map((reference) => reference.path)
+                .filter((path): path is string => Boolean(path)),
+            ),
+          ],
+          suggestedApproach: entry.improvement?.detail,
+          quickWin: entry.signal.max - entry.signal.earned <= 0.2,
         })),
     )
     .filter((action) => action.points >= 0.1)
@@ -138,6 +148,455 @@ function buildImprovementPlan(
     maxScore,
     actions,
   };
+}
+
+// --- Technical skills --------------------------------------------------------------
+
+function technicalSkillsSignals(context: AnalysisContext): BuiltSignal[] {
+  const sourcePaths = context.allPaths
+    .filter(isSourcePath)
+    .filter((path) => !isTestPath(path));
+  const sourceFiles = context.files.filter(
+    (file) => isSourcePath(file.path.toLowerCase()) && !isTestPath(file.path),
+  );
+  const sourceLines = sourceFiles.reduce(
+    (sum, file) => sum + file.content.split('\n').filter(Boolean).length,
+    0,
+  );
+  const meaningfulFraction =
+    0.45 * Math.min(1, sourcePaths.length / 3) +
+    0.55 * Math.min(1, sourceLines / 220);
+  const technologies = new Set([
+    ...(context.repository.language ? [context.repository.language] : []),
+    ...context.dependencies.map((dependency) => dependency.name),
+  ]);
+  const domains = detectTechnicalDomains(context.files);
+  const implementationFraction = Math.min(
+    1,
+    domains.length / 3 + context.dependencies.length / 8,
+  );
+  const directories = new Set(
+    sourcePaths
+      .filter((path) => path.includes('/'))
+      .map((path) => path.split('/').slice(0, -1).join('/')),
+  );
+  const depthFraction =
+    0.35 * Math.min(1, directories.size / 3) +
+    0.35 * Math.min(1, sourcePaths.length / 7) +
+    0.3 * Math.min(1, domains.length / 3);
+
+  return [
+    {
+      signal: {
+        label: 'Meaningful code',
+        max: 1.1,
+        earned: credit(1.1, meaningfulFraction),
+        detail:
+          sourcePaths.length === 0
+            ? 'No authored source files were found.'
+            : `${sourcePaths.length} source file(s) and ${sourceLines} non-empty sampled source line(s) show the implementation behind the project.`,
+        evidence: sourcePaths.slice(0, 4).map((path) => ({
+          kind: 'file' as const,
+          label: 'Source implementation',
+          path,
+        })),
+      },
+      improvement:
+        meaningfulFraction >= 0.75
+          ? undefined
+          : {
+              title: 'Build out the core implementation',
+              detail:
+                sourcePaths.length === 0
+                  ? 'Add the source code that implements the project’s main behavior.'
+                  : `The implementation is still small (${sourcePaths.length} source file(s)). Extend the core workflow with a meaningful feature or deeper technical behavior instead of adding repository ceremony.`,
+            },
+    },
+    {
+      signal: {
+        label: 'Languages and frameworks',
+        max: 0.7,
+        earned: credit(0.7, technologies.size / 4),
+        detail:
+          technologies.size > 0
+            ? `${technologies.size} language/framework/dependency signal(s) were observed, including ${[...technologies].slice(0, 5).join(', ')}.`
+            : 'No language, framework, or parseable dependency evidence was found.',
+        evidence: [
+          ...(context.repository.language
+            ? [
+                {
+                  kind: 'github' as const,
+                  label: `Primary language: ${context.repository.language}`,
+                },
+              ]
+            : []),
+          ...context.dependencies.slice(0, 3).map((dependency) => ({
+            kind: 'dependency' as const,
+            label: dependency.name,
+            path: dependency.path,
+          })),
+        ],
+      },
+    },
+    {
+      signal: {
+        label: 'Technical implementation breadth',
+        max: 0.7,
+        earned: credit(0.7, implementationFraction),
+        detail:
+          domains.length + context.dependencies.length > 0
+            ? `The code and manifests demonstrate ${domains.slice(0, 6).join(', ') || `${context.dependencies.length} declared technical dependencies`}.`
+            : 'No API, database, algorithmic, AI/ML, asynchronous, or career-specific implementation signal was found in sampled code.',
+        evidence: context.dependencies.slice(0, 4).map((dependency) => ({
+          kind: 'dependency' as const,
+          label: dependency.name,
+          path: dependency.path,
+        })),
+      },
+      improvement:
+        implementationFraction >= 0.7
+          ? undefined
+          : {
+              title: 'Add a deeper technical feature',
+              detail:
+                'Extend the project with a substantive API, data workflow, algorithm, model, integration, or other implementation that demonstrates technical decisions in code.',
+            },
+    },
+    {
+      signal: {
+        label: 'Technical depth',
+        max: 0.5,
+        earned: credit(0.5, depthFraction),
+        detail: `${directories.size} source module director${directories.size === 1 ? 'y' : 'ies'}, ${sourcePaths.length} source file(s), and ${domains.length} implemented technical domain(s) contribute to depth.`,
+        evidence: sourcePaths.slice(0, 2).map((path) => ({
+          kind: 'file' as const,
+          label: 'Technical depth',
+          path,
+        })),
+      },
+    },
+  ];
+}
+
+// --- Creativity and complexity -----------------------------------------------------
+
+function creativityComplexitySignals(context: AnalysisContext): BuiltSignal[] {
+  const sourcePaths = context.allPaths
+    .filter(isSourcePath)
+    .filter((path) => !isTestPath(path));
+  const sourceLines = context.files
+    .filter(
+      (file) => isSourcePath(file.path.toLowerCase()) && !isTestPath(file.path),
+    )
+    .reduce(
+      (sum, file) => sum + file.content.split('\n').filter(Boolean).length,
+      0,
+    );
+  const domains = detectTechnicalDomains(context.files);
+  const directories = new Set(
+    sourcePaths
+      .filter((path) => path.includes('/'))
+      .map((path) => path.split('/').slice(0, -1).join('/')),
+  );
+  const challengeEvidence = context.codeEvidence.filter((evidence) =>
+    ['error-handling', 'input-validation'].includes(evidence.skillId),
+  );
+  const scopeFraction =
+    0.5 * Math.min(1, sourcePaths.length / 6) +
+    0.5 * Math.min(1, sourceLines / 400);
+  const integrationFraction = Math.min(
+    1,
+    context.dependencies.length / 6 + directories.size / 4 + domains.length / 4,
+  );
+  const challengeFraction = Math.min(
+    1,
+    domains.length / 4 + challengeEvidence.length / 3 + sourceLines / 900,
+  );
+  const readmeText = context.readme?.content.toLowerCase() ?? '';
+  const hasProblemFraming =
+    (context.repository.description?.trim().length ?? 0) >= 30 ||
+    /\b(problem|challenge|goal|objective|motivation|built to|helps? users?)\b/.test(
+      readmeText,
+    );
+  const hasDistinctiveScope =
+    context.repository.topics.length >= 2 || domains.length >= 2;
+
+  return [
+    {
+      signal: {
+        label: 'Project scope',
+        max: 0.6,
+        earned: credit(0.6, scopeFraction),
+        detail:
+          sourcePaths.length > 0
+            ? `${sourcePaths.length} production source file(s) and ${sourceLines} sampled source line(s) indicate the amount of implemented scope.`
+            : 'No production source scope was found.',
+        evidence: sourcePaths.slice(0, 4).map((path) => ({
+          kind: 'file' as const,
+          label: 'Implemented project scope',
+          path,
+        })),
+      },
+    },
+    {
+      signal: {
+        label: 'Multiple technologies working together',
+        max: 0.5,
+        earned: credit(0.5, integrationFraction),
+        detail: `${context.dependencies.length} dependencies, ${directories.size} module directories, and ${domains.length} technical domain(s) provide observable integration evidence.`,
+        evidence: context.dependencies.slice(0, 4).map((dependency) => ({
+          kind: 'dependency' as const,
+          label: dependency.name,
+          path: dependency.path,
+        })),
+      },
+      improvement:
+        integrationFraction >= 0.7
+          ? undefined
+          : {
+              title: 'Connect another meaningful system component',
+              detail:
+                'Add an integration that serves the project’s goal—for example persistence, an external API, data processing, or a distinct frontend/backend boundary.',
+            },
+    },
+    {
+      signal: {
+        label: 'Interesting technical challenges',
+        max: 0.6,
+        earned: credit(0.6, challengeFraction),
+        detail:
+          domains.length + challengeEvidence.length > 0
+            ? `${domains.length} technical domain and ${challengeEvidence.length} defensive implementation signal(s) show non-trivial technical decisions.`
+            : 'The sampled code does not yet expose a non-trivial algorithm, integration, data flow, model, or defensive implementation challenge.',
+        evidence: challengeEvidence.slice(0, 4).map((evidence) => ({
+          kind: 'file' as const,
+          label: evidence.detected,
+          path: evidence.path,
+          line: evidence.startLine,
+        })),
+      },
+    },
+    {
+      signal: {
+        label: 'Original problem framing',
+        max: 0.3,
+        earned: credit(
+          0.3,
+          (hasProblemFraming ? 0.6 : 0) + (hasDistinctiveScope ? 0.4 : 0),
+        ),
+        detail:
+          hasProblemFraming || hasDistinctiveScope
+            ? 'The description, README, topics, or technical scope communicate a specific problem beyond a bare code exercise.'
+            : 'No specific problem, motivation, distinctive scope, or real-world use is explained yet.',
+        evidence: [
+          ...(context.repository.description
+            ? [{ kind: 'github' as const, label: 'Repository description' }]
+            : []),
+          ...(context.readme
+            ? [
+                {
+                  kind: 'file' as const,
+                  label: 'README problem framing',
+                  path: context.readme.path,
+                },
+              ]
+            : []),
+        ],
+      },
+      improvement: hasProblemFraming
+        ? undefined
+        : {
+            title:
+              'Explain the problem and what makes the solution interesting',
+            detail:
+              'Add a short README section describing who the project helps, the problem it solves, and the hardest technical decision you made.',
+          },
+    },
+  ];
+}
+
+// --- Project quality ---------------------------------------------------------------
+
+function projectQualitySignals(context: AnalysisContext): BuiltSignal[] {
+  const tests = testingSignals(context);
+  const automation = ciSignals(context);
+  const structure = codeStructureSignals(context);
+  const completeness = completenessSignals(context);
+  const hasTests = context.allPaths.some(isTestPath);
+  const hasAutomation =
+    context.workflowFiles.length > 0 ||
+    context.allPaths.some((path) =>
+      /^\.github\/workflows\/|\.gitlab-ci\.ya?ml$|jenkinsfile$/.test(path),
+    );
+
+  return [
+    summarizeSignalGroup(
+      'Code organization and maintainability',
+      structure,
+      0.4,
+    ),
+    summarizeSignalGroup('Completeness and reproducibility', completeness, 0.3),
+    summarizeSignalGroup('Testing', tests, 0.4),
+    summarizeSignalGroup('CI/CD and automation', automation, 0.2),
+    {
+      signal: {
+        label: 'Exceptional-quality safeguards',
+        max: 0.2,
+        earned: hasTests && hasAutomation ? 0.2 : 0,
+        detail:
+          hasTests && hasAutomation
+            ? 'Both automated tests and an automation pipeline are present—evidence expected of exceptionally polished work.'
+            : 'Tests and CI/CD are treated as polish signals: their absence does not erase the project’s technical value, but prevents full Project Quality credit.',
+        evidence: [
+          ...(hasTests
+            ? [
+                {
+                  kind: 'static-analysis' as const,
+                  label: 'Automated tests detected',
+                },
+              ]
+            : []),
+          ...(hasAutomation
+            ? [
+                {
+                  kind: 'static-analysis' as const,
+                  label: 'Automation pipeline detected',
+                },
+              ]
+            : []),
+        ],
+      },
+    },
+  ];
+}
+
+function summarizeSignalGroup(
+  label: string,
+  entries: BuiltSignal[],
+  max: number,
+): BuiltSignal {
+  const originalMax = entries.reduce((sum, entry) => sum + entry.signal.max, 0);
+  const originalEarned = entries.reduce(
+    (sum, entry) => sum + entry.signal.earned,
+    0,
+  );
+  const met = entries.filter(
+    (entry) => entry.signal.earned >= entry.signal.max,
+  );
+  const strongestImprovement = entries
+    .filter((entry) => entry.improvement)
+    .sort(
+      (a, b) =>
+        b.signal.max - b.signal.earned - (a.signal.max - a.signal.earned),
+    )[0]?.improvement;
+  return {
+    signal: {
+      label,
+      max,
+      earned: credit(max, originalMax > 0 ? originalEarned / originalMax : 0),
+      detail: `${met.length} of ${entries.length} supporting checks passed: ${
+        met.map((entry) => entry.signal.label.toLowerCase()).join(', ') ||
+        'none'
+      }.`,
+      evidence: entries.flatMap((entry) => entry.signal.evidence).slice(0, 5),
+    },
+    improvement: strongestImprovement,
+  };
+}
+
+// --- Presentation ------------------------------------------------------------------
+
+function presentationSignals(context: AnalysisContext): BuiltSignal[] {
+  const documentation = reweightSignals(documentationSignals(context), 0.9);
+  const hasDescription =
+    (context.repository.description?.trim().length ?? 0) > 0;
+  return [
+    ...documentation,
+    {
+      signal: {
+        label: 'Project description',
+        max: 0.1,
+        earned: hasDescription ? 0.1 : 0,
+        detail: hasDescription
+          ? 'The GitHub repository has a concise project description.'
+          : 'The GitHub repository has no project description.',
+        evidence: hasDescription
+          ? [{ kind: 'github', label: 'Repository description' }]
+          : [],
+      },
+      improvement: hasDescription
+        ? undefined
+        : {
+            title: 'Add a concise project description',
+            detail:
+              'Summarize the problem and solution in one sentence so a reviewer understands the project before opening the README.',
+          },
+    },
+  ];
+}
+
+function reweightSignals(
+  signals: BuiltSignal[],
+  targetMax: number,
+): BuiltSignal[] {
+  const originalMax = signals.reduce((sum, entry) => sum + entry.signal.max, 0);
+  let allocated = 0;
+  return signals.map((entry, index) => {
+    const isLast = index === signals.length - 1;
+    const max = isLast
+      ? round1(targetMax - allocated)
+      : round1(targetMax * (entry.signal.max / originalMax));
+    allocated = round1(allocated + max);
+    return {
+      ...entry,
+      signal: {
+        ...entry.signal,
+        max,
+        earned: credit(
+          max,
+          entry.signal.max > 0 ? entry.signal.earned / entry.signal.max : 0,
+        ),
+      },
+    };
+  });
+}
+
+function detectTechnicalDomains(files: RepositoryFileEvidence[]): string[] {
+  const source = files.map((file) => file.content).join('\n');
+  const domains = [
+    {
+      label: 'API integration',
+      pattern:
+        /\b(fetch\s*\(|axios\.|app\.(?:get|post|put|delete)\s*\(|router\.(?:get|post|put|delete)\s*\()/i,
+    },
+    {
+      label: 'database or persistence',
+      pattern:
+        /\b(SELECT|INSERT|UPDATE|DELETE)\b|\b(?:query|transaction|repository|prisma|mongoose)\s*[.(]/i,
+    },
+    {
+      label: 'algorithmic processing',
+      pattern:
+        /\b(?:sort|reduce|graph|tree|dynamic programming|binary search|optimi[sz]|backtest)\b/i,
+    },
+    {
+      label: 'AI or machine learning',
+      pattern:
+        /\b(?:model\.(?:fit|predict)|train_test_split|tensorflow|pytorch|sklearn|embedding|neural|llm)\b/i,
+    },
+    {
+      label: 'asynchronous workflow',
+      pattern: /\b(?:async|await|Promise\.all|queue|worker|stream)\b/i,
+    },
+    {
+      label: 'data transformation',
+      pattern:
+        /\b(?:groupby|dataframe|map\s*\(|filter\s*\(|aggregate|pipeline)\b/i,
+    },
+  ];
+  return domains
+    .filter((domain) => domain.pattern.test(source))
+    .map((domain) => domain.label);
 }
 
 // --- Documentation -----------------------------------------------------------------

@@ -13,27 +13,25 @@ export interface EvidenceReference {
 }
 
 /**
- * The six categories that make up the Proofly score. Category points are expressed
+ * The five categories that make up the Proofly score. Category points are expressed
  * directly on the 0-10 scale, so the categories always sum to the final score.
  */
 export const scoreCategoryKeys = [
-  'documentation',
-  'testing',
-  'ci-automation',
-  'code-structure',
+  'technical-skills',
   'career-relevance',
-  'project-completeness',
+  'creativity-complexity',
+  'project-quality',
+  'presentation',
 ] as const;
 
 export type ScoreCategoryKey = (typeof scoreCategoryKeys)[number];
 
 export const scoreCategoryLabels: Record<ScoreCategoryKey, string> = {
-  documentation: 'Documentation',
-  testing: 'Testing',
-  'ci-automation': 'CI/CD and automation',
-  'code-structure': 'Code structure',
-  'career-relevance': 'Career relevance',
-  'project-completeness': 'Project completeness',
+  'technical-skills': 'Technical Skills',
+  'career-relevance': 'Career Relevance',
+  'creativity-complexity': 'Creativity & Complexity',
+  'project-quality': 'Project Quality',
+  presentation: 'Presentation',
 };
 
 /**
@@ -93,7 +91,7 @@ export interface CareerRelevanceReport {
 }
 
 export interface EngineeringEvidenceReport {
-  /** 0-100, rolled up from the engineering-quality categories only. */
+  /** 0-100, rolled up from every project-strength category except career relevance. */
   score: number;
   band: RelevanceBand;
   summary: string;
@@ -124,6 +122,81 @@ export interface CodeEvidence {
   commitSha?: string;
 }
 
+export type CodeQualityDimensionKey =
+  | 'readability'
+  | 'modularity'
+  | 'error-handling'
+  | 'documentation'
+  | 'maintainability';
+
+export type CodeFindingKind = 'strength' | 'improvement';
+export type FindingSeverity = 'High' | 'Medium' | 'Low';
+
+/** A source-backed observation produced by Proofly's static analysis. */
+export interface CodeQualityFinding {
+  id: string;
+  kind: CodeFindingKind;
+  severity: FindingSeverity;
+  dimension: CodeQualityDimensionKey;
+  path: string;
+  startLine: number;
+  endLine: number;
+  matchOffset: number;
+  language: string;
+  fragment: string;
+  title: string;
+  found: string;
+  why: string;
+  suggestion: string;
+  example?: string;
+  githubUrl: string;
+}
+
+export interface CodeQualityDimension {
+  key: CodeQualityDimensionKey;
+  label: string;
+  score: number;
+  summary: string;
+  findingIds: string[];
+}
+
+export interface CodeQualityReport {
+  score: number;
+  summary: string;
+  dimensions: CodeQualityDimension[];
+  findings: CodeQualityFinding[];
+}
+
+export interface RepositoryCommitEvidence {
+  sha: string;
+  message: string;
+  committedAt: string;
+  htmlUrl: string;
+  additions?: number | null;
+  deletions?: number | null;
+  changedFiles?: number | null;
+}
+
+export interface DevelopmentActivityCommit extends RepositoryCommitEvidence {
+  quality: 'clear' | 'weak';
+  reason: string;
+}
+
+export interface DevelopmentActivityReport {
+  scope: string;
+  commitCount: number;
+  meaningfulCommitCount: number;
+  weakMessageCount: number;
+  largeCommitCount: number;
+  activeDays: number;
+  firstCommitAt: string | null;
+  lastCommitAt: string | null;
+  recentDevelopment: boolean;
+  label: string;
+  summary: string;
+  commits: DevelopmentActivityCommit[];
+}
+
 export interface ImprovementAction {
   id: string;
   title: string;
@@ -131,6 +204,11 @@ export interface ImprovementAction {
   category: ScoreCategoryKey;
   /** Unearned points this action can recover, on the 0-10 scale. */
   points: number;
+  impact?: FindingSeverity;
+  paths?: string[];
+  suggestedApproach?: string;
+  example?: string;
+  quickWin?: boolean;
 }
 
 export interface ImprovementPlan {
@@ -258,9 +336,9 @@ export interface PortfolioContributor {
   status: RepositoryAnalysisStatus;
   /** Career relevance on a 0-10 scale. Null when the repository was never read. */
   careerRelevance: number | null;
-  /** Engineering evidence on a 0-10 scale. Null when the repository was never read. */
+  /** Non-career project strength on a 0-10 scale. Null when never read. */
   engineering: number | null;
-  /** Career evidence strength, 0-10, blending relevance and engineering. */
+  /** Overall career-targeted project strength on a 0-10 scale. */
   strength: number | null;
   /** The repository's own 0-10 Proofly score. */
   prooflyScore: number | null;
@@ -365,7 +443,7 @@ export interface RepositoryAnalysisFinding {
 
 export interface RepositoryEvidenceRating {
   score: number;
-  label: 'Excellent' | 'Strong' | 'Developing' | 'Early';
+  label: 'Exceptional' | 'Strong' | 'Solid' | 'Developing' | 'Starting';
   summary: string;
   reasoning: string[];
 }
@@ -378,6 +456,8 @@ export interface RepositoryAnalysisResponse {
   engineering: EngineeringEvidenceReport;
   careerRelevance: CareerRelevanceReport;
   codeEvidence: CodeEvidence[];
+  codeQuality: CodeQualityReport;
+  developmentActivity: DevelopmentActivityReport;
   improvementPlan: ImprovementPlan;
   fileReport: FileInspectionReport;
   findings: RepositoryAnalysisFinding[];

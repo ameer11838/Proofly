@@ -1,118 +1,408 @@
-import { scoreCategoryLabels, type CodeEvidence } from '@proofly/shared-types';
+import { useId, useMemo, useState } from 'react';
+import {
+  scoreCategoryLabels,
+  type CodeEvidence,
+  type CodeQualityFinding,
+  type FindingSeverity,
+} from '@proofly/shared-types';
 import { CodeFragment } from './CodeFragment.js';
 import { Collapsible } from './Collapsible.js';
 
 interface CodeEvidenceSectionProps {
   codeEvidence: CodeEvidence[];
+  qualityFindings: CodeQualityFinding[];
 }
+
+type EvidenceFilter =
+  'all' | 'strengths' | 'improvements' | 'career' | 'quality';
+
+interface EvidenceItem {
+  id: string;
+  source: 'career' | 'quality';
+  kind: 'strength' | 'improvement';
+  severity: FindingSeverity;
+  path: string;
+  startLine: number;
+  endLine: number;
+  matchOffset: number;
+  language: string;
+  fragment: string;
+  title: string;
+  detected: string;
+  why: string;
+  contribution: string;
+  suggestion?: string;
+  example?: string;
+  githubUrl: string;
+  commitSha?: string;
+}
+
+const filters: Array<{ key: EvidenceFilter; label: string }> = [
+  { key: 'all', label: 'All' },
+  { key: 'strengths', label: 'Strengths' },
+  { key: 'improvements', label: 'Improvements' },
+  { key: 'career', label: 'Career Evidence' },
+  { key: 'quality', label: 'Code Quality' },
+];
+
+const severities: Array<'all' | FindingSeverity> = [
+  'all',
+  'High',
+  'Medium',
+  'Low',
+];
 
 export function CodeEvidenceSection({
   codeEvidence,
+  qualityFindings,
 }: CodeEvidenceSectionProps) {
-  if (codeEvidence.length === 0) {
+  const [filter, setFilter] = useState<EvidenceFilter>('all');
+  const [severity, setSeverity] = useState<'all' | FindingSeverity>('all');
+  const [file, setFile] = useState('all');
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const instanceId = useId().replace(/:/g, '');
+  const items = useMemo(
+    () => normalizeEvidence(codeEvidence, qualityFindings),
+    [codeEvidence, qualityFindings],
+  );
+  const files = [...new Set(items.map((item) => item.path))].sort();
+  const visible = items.filter(
+    (item) =>
+      (filter === 'all' ||
+        (filter === 'strengths' && item.kind === 'strength') ||
+        (filter === 'improvements' && item.kind === 'improvement') ||
+        (filter === 'career' && item.source === 'career') ||
+        (filter === 'quality' && item.source === 'quality')) &&
+      (severity === 'all' || item.severity === severity) &&
+      (file === 'all' || item.path === file),
+  );
+  const safeIndex = visible.length === 0 ? 0 : activeIndex % visible.length;
+
+  if (items.length === 0) {
     return (
-      <p className="rounded-2xl bg-slate-50 dark:bg-slate-800/60 px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
-        No source line in the analyzed files matched a tracked technical signal,
-        so Proofly has no code fragment to show. Nothing here is inferred.
+      <p className="surface-subtle px-4 py-3 text-sm text-[var(--muted)]">
+        No source line in the analyzed files produced a reliable technical or
+        code-quality finding. Nothing here is inferred.
       </p>
     );
   }
 
-  const byFile = groupByFile(codeEvidence);
+  function jump(direction: -1 | 1) {
+    if (visible.length === 0) return;
+    const next = (safeIndex + direction + visible.length) % visible.length;
+    setActiveIndex(next);
+    document
+      .getElementById(`${instanceId}-evidence-${visible[next]?.id}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  async function copy(item: EvidenceItem) {
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(item.fragment);
+      } else {
+        legacyCopy(item.fragment);
+      }
+    } catch {
+      legacyCopy(item.fragment);
+    }
+    setCopiedId(item.id);
+    window.setTimeout(() => setCopiedId(null), 1_500);
+  }
 
   return (
-    <div className="grid gap-3">
-      <p className="text-sm text-slate-600 dark:text-slate-300">
-        Every fragment below is copied verbatim from inspected source
-        {codeEvidence.some((item) => item.commitSha)
-          ? '; fork evidence contains only lines added by the verified user'
-          : ''}
-        , with the matched line highlighted.
+    <div className="grid gap-5">
+      <p className="text-sm text-[var(--muted)]">
+        Every fragment is copied from inspected source. The highlighted line
+        triggered the finding; fork evidence remains limited to verified added
+        lines.
       </p>
-      {byFile.map(([path, items]) => (
-        <Collapsible
-          key={path}
-          title={path}
-          summary={items.map((item) => item.detected).join(' · ')}
-          badge={
-            <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-300">
-              {items.length} {items.length === 1 ? 'match' : 'matches'}
-            </span>
-          }
-        >
-          <div className="grid gap-5">
-            {items.map((evidence) => (
-              <article key={evidence.id} className="grid gap-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-aurora/10 dark:bg-indigo-500/20 px-3 py-1 text-xs font-semibold text-aurora dark:text-indigo-300">
-                    {evidence.detected}
-                  </span>
-                  <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-xs font-medium text-slate-600 dark:text-slate-300">
-                    {evidence.skillLabel}
-                  </span>
-                  <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-xs font-medium text-slate-600 dark:text-slate-300">
-                    {scoreCategoryLabels[evidence.category]}
-                  </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    lines {evidence.startLine}–{evidence.endLine}
-                  </span>
-                  {evidence.commitSha ? (
-                    <span className="text-xs font-mono text-emerald-700 dark:text-emerald-300">
-                      commit {evidence.commitSha.slice(0, 7)}
-                    </span>
-                  ) : null}
-                </div>
 
-                <CodeFragment
-                  fragment={evidence.fragment}
-                  language={evidence.language}
-                  startLine={evidence.startLine}
-                  matchOffset={evidence.matchOffset}
-                />
-
-                <dl className="grid gap-2 text-sm">
-                  <div className="flex gap-2">
-                    <dt className="shrink-0 font-semibold text-slate-900 dark:text-slate-100">
-                      Why it matters
-                    </dt>
-                    <dd className="text-slate-600 dark:text-slate-300">
-                      {evidence.why}
-                    </dd>
-                  </div>
-                  <div className="flex gap-2">
-                    <dt className="shrink-0 font-semibold text-slate-900 dark:text-slate-100">
-                      Score impact
-                    </dt>
-                    <dd className="text-slate-600 dark:text-slate-300">
-                      {evidence.scoreImpact}
-                    </dd>
-                  </div>
-                </dl>
-
-                <a
-                  className="inline-flex w-fit items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 transition hover:border-aurora hover:text-aurora dark:hover:text-indigo-300"
-                  href={evidence.githubUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  View on GitHub
-                  <span aria-hidden="true">↗</span>
-                </a>
-              </article>
+      <div className="sticky top-0 z-10 grid gap-3 border-y border-[var(--border)] bg-[var(--surface)] py-3">
+        <div className="flex flex-wrap gap-1" aria-label="Evidence category">
+          {filters.map((option) => (
+            <FilterButton
+              key={option.key}
+              active={filter === option.key}
+              onClick={() => {
+                setFilter(option.key);
+                setActiveIndex(0);
+              }}
+            >
+              {option.label}
+            </FilterButton>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="technical-label" htmlFor="evidence-file-filter">
+            File
+          </label>
+          <select
+            id="evidence-file-filter"
+            className="focus-control min-w-48 rounded-[6px] border border-[var(--border)] bg-[var(--surface-subtle)] px-2.5 py-1.5 font-mono text-xs text-[var(--text)]"
+            value={file}
+            onChange={(event) => {
+              setFile(event.target.value);
+              setActiveIndex(0);
+            }}
+          >
+            <option value="all">All files</option>
+            {files.map((path) => (
+              <option key={path} value={path}>
+                {path}
+              </option>
             ))}
+          </select>
+          <span className="technical-label ml-1">Severity</span>
+          {severities.map((option) => (
+            <FilterButton
+              key={option}
+              active={severity === option}
+              onClick={() => {
+                setSeverity(option);
+                setActiveIndex(0);
+              }}
+            >
+              {option === 'all' ? 'All' : option}
+            </FilterButton>
+          ))}
+          <div className="ml-auto flex items-center gap-1">
+            <button
+              type="button"
+              className="focus-control rounded-[6px] border border-[var(--border)] px-2 py-1 text-xs text-[var(--muted)] disabled:opacity-40"
+              disabled={visible.length < 2}
+              onClick={() => jump(-1)}
+              aria-label="Previous finding"
+            >
+              ←
+            </button>
+            <span className="w-14 text-center font-mono text-xs text-[var(--muted)]">
+              {visible.length === 0
+                ? '0 / 0'
+                : `${safeIndex + 1} / ${visible.length}`}
+            </span>
+            <button
+              type="button"
+              className="focus-control rounded-[6px] border border-[var(--border)] px-2 py-1 text-xs text-[var(--muted)] disabled:opacity-40"
+              disabled={visible.length < 2}
+              onClick={() => jump(1)}
+              aria-label="Next finding"
+            >
+              →
+            </button>
           </div>
-        </Collapsible>
-      ))}
+        </div>
+      </div>
+
+      {visible.length === 0 ? (
+        <p className="py-8 text-center text-sm text-[var(--muted)]">
+          No findings match these filters.
+        </p>
+      ) : (
+        <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
+          {visible.map((item, index) => (
+            <div id={`${instanceId}-evidence-${item.id}`} key={item.id}>
+              <Collapsible
+                title={item.path}
+                summary={`${item.title} · L${item.startLine}–${item.endLine}`}
+                defaultOpen={index === safeIndex}
+                badge={
+                  <span className={badgeClass(item)}>
+                    {item.kind === 'strength' ? 'Strength' : item.severity}
+                  </span>
+                }
+              >
+                <article
+                  className={`grid gap-4 rounded-[var(--radius-sm)] border-l-4 p-4 ${evidenceSurface(item)}`}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="font-mono text-xs text-[var(--muted)]">
+                        {item.path} · L{item.startLine}–{item.endLine}
+                      </p>
+                      <strong className="mt-1 block font-mono text-xs uppercase tracking-[0.12em] text-[var(--accent)]">
+                        {item.title}
+                      </strong>
+                      <p className="mt-1 text-xs text-[var(--muted)]">
+                        {item.detected}
+                        {item.commitSha
+                          ? ` · commit ${item.commitSha.slice(0, 7)}`
+                          : ''}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className="focus-control rounded-[6px] border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 font-mono text-xs font-semibold text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                      onClick={() => void copy(item)}
+                    >
+                      {copiedId === item.id ? 'Copied' : 'Copy code'}
+                    </button>
+                  </div>
+
+                  <CodeFragment
+                    fragment={item.fragment}
+                    language={item.language}
+                    startLine={item.startLine}
+                    matchOffset={item.matchOffset}
+                  />
+
+                  <dl className="grid gap-2 border-y border-[var(--border)] py-3 text-sm">
+                    <EvidenceRow
+                      label="What Proofly found"
+                      value={item.contribution}
+                    />
+                    <EvidenceRow label="Why it matters" value={item.why} />
+                  </dl>
+
+                  {item.suggestion ? (
+                    <details className="group rounded-[7px] border border-[var(--warning)] bg-[var(--warning-soft)] px-4 py-3">
+                      <summary className="focus-control cursor-pointer font-mono text-sm font-bold text-[var(--warning)]">
+                        How can I improve this?
+                      </summary>
+                      <div className="mt-3 grid gap-2 text-sm text-[var(--text)]">
+                        <p>{item.suggestion}</p>
+                        {item.example ? (
+                          <pre className="overflow-x-auto rounded-[6px] bg-[#080c14] p-3 font-mono text-xs leading-5 text-slate-200">
+                            <code>{item.example}</code>
+                          </pre>
+                        ) : null}
+                      </div>
+                    </details>
+                  ) : null}
+
+                  <a
+                    className="focus-control inline-flex w-fit items-center gap-1.5 rounded-[6px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-mono text-xs font-semibold text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                    href={item.githubUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open file on GitHub <span aria-hidden="true">↗</span>
+                  </a>
+                </article>
+              </Collapsible>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-function groupByFile(codeEvidence: CodeEvidence[]): [string, CodeEvidence[]][] {
-  const groups = new Map<string, CodeEvidence[]>();
+function legacyCopy(value: string) {
+  const textarea = document.createElement('textarea');
+  textarea.value = value;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.append(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  textarea.remove();
+}
 
-  for (const evidence of codeEvidence) {
-    groups.set(evidence.path, [...(groups.get(evidence.path) ?? []), evidence]);
+function normalizeEvidence(
+  career: CodeEvidence[],
+  quality: CodeQualityFinding[],
+): EvidenceItem[] {
+  return [
+    ...career.map((evidence): EvidenceItem => ({
+      id: `career-${evidence.id}`,
+      source: 'career',
+      kind: 'strength',
+      severity: 'Low',
+      path: evidence.path,
+      startLine: evidence.startLine,
+      endLine: evidence.endLine,
+      matchOffset: evidence.matchOffset,
+      language: evidence.language,
+      fragment: evidence.fragment,
+      title: evidence.skillLabel,
+      detected: `${scoreCategoryLabels[evidence.category]} · ${evidence.detected}`,
+      why: evidence.why,
+      contribution: evidence.scoreImpact,
+      githubUrl: evidence.githubUrl,
+      commitSha: evidence.commitSha,
+    })),
+    ...quality.map((finding): EvidenceItem => ({
+      id: finding.id,
+      source: 'quality',
+      kind: finding.kind,
+      severity: finding.severity,
+      path: finding.path,
+      startLine: finding.startLine,
+      endLine: finding.endLine,
+      matchOffset: finding.matchOffset,
+      language: finding.language,
+      fragment: finding.fragment,
+      title: finding.title,
+      detected: `Code Quality · ${finding.dimension.replace('-', ' ')}`,
+      why: finding.why,
+      contribution: finding.found,
+      suggestion:
+        finding.kind === 'improvement' ? finding.suggestion : undefined,
+      example: finding.example,
+      githubUrl: finding.githubUrl,
+    })),
+  ];
+}
+
+function FilterButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      className={`focus-control rounded-[5px] border px-2.5 py-1.5 font-mono text-xs font-semibold uppercase tracking-wide ${
+        active
+          ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
+          : 'border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)]'
+      }`}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
+}
+
+function EvidenceRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid gap-1 sm:grid-cols-[9rem_1fr]">
+      <dt className="technical-label">{label}</dt>
+      <dd className="text-[var(--muted)]">{value}</dd>
+    </div>
+  );
+}
+
+function badgeClass(item: EvidenceItem): string {
+  const base =
+    'rounded-[5px] px-2 py-1 font-mono text-xs font-semibold uppercase';
+  if (item.kind === 'strength') {
+    return `${base} bg-[var(--success-soft)] text-[var(--success)]`;
   }
+  if (isGenuineIssue(item.title)) {
+    return `${base} bg-[var(--error-soft)] text-[var(--error)]`;
+  }
+  return `${base} bg-[var(--warning-soft)] text-[var(--warning)]`;
+}
 
-  return [...groups.entries()].sort((a, b) => b[1].length - a[1].length);
+function evidenceSurface(item: EvidenceItem): string {
+  if (item.kind === 'strength') {
+    return 'border-[var(--success)] bg-[var(--success-soft)]';
+  }
+  if (isGenuineIssue(item.title)) {
+    return 'border-[var(--error)] bg-[var(--error-soft)]';
+  }
+  return 'border-[var(--warning)] bg-[var(--warning-soft)]';
+}
+
+function isGenuineIssue(title: string): boolean {
+  return /credential|unsafe|sql|silenced error/i.test(title);
 }

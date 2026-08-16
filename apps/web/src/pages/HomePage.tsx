@@ -147,9 +147,9 @@ export function HomePage() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_#e0e7ff,_transparent_30%),linear-gradient(135deg,_#f8fafc,_#eef2ff_55%,_#ecfeff)] px-6 py-10 text-ink transition-colors lg:px-10 lg:py-12 dark:bg-[radial-gradient(circle_at_top_left,_#1e1b4b,_transparent_35%),linear-gradient(135deg,_#020617,_#0b1120_55%,_#041016)] dark:text-slate-100">
-      <section className="mx-auto max-w-7xl xl:max-w-[86rem] 2xl:max-w-[92rem]">
-        <nav className="mb-11 flex items-center justify-between gap-4">
+    <main className="min-h-screen overflow-hidden bg-[var(--page)] px-5 py-6 text-[var(--text)] transition-colors sm:px-8 lg:px-10 lg:py-8">
+      <section className="mx-auto max-w-7xl xl:max-w-[84rem]">
+        <nav className="flex items-center justify-between gap-4 border-b border-[var(--border)] pb-5">
           <div className="flex items-center gap-3">
             <img
               className="size-12 object-contain"
@@ -158,14 +158,12 @@ export function HomePage() {
             />
             <div>
               <p className="text-xl font-bold">Proofly</p>
-              <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
-                portfolio evidence
-              </p>
+              <p className="technical-label mt-0.5">portfolio evidence</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <a
-              className="hidden rounded-full border border-slate-200 bg-white/70 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm md:inline-flex dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300"
+              className="focus-control hidden rounded-[7px] border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-xs font-medium text-[var(--muted)] transition hover:border-[var(--border-strong)] hover:text-[var(--text)] md:inline-flex"
               href="https://github.com"
               target="_blank"
               rel="noreferrer"
@@ -176,19 +174,17 @@ export function HomePage() {
           </div>
         </nav>
 
-        <div className="grid gap-12 lg:grid-cols-[1.18fr_0.82fr] lg:items-center lg:gap-16">
-          <div>
-            <p className="mb-6 inline-flex rounded-full bg-white/80 px-5 py-2.5 text-[0.9375rem] font-medium text-indigo-700 shadow-sm ring-1 ring-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-300 dark:ring-indigo-500/25">
-              Evidence-backed repository analysis
-            </p>
+        <div className="grid gap-10 py-12 lg:grid-cols-[1.16fr_0.84fr] lg:items-center lg:gap-14 lg:py-16">
+          <div className="max-w-3xl">
+            <p className="section-kicker mb-5">Proofly / Portfolio evidence</p>
             {/* Sized so the headline settles on three lines from lg upward rather than four. */}
-            <h1 className="max-w-4xl text-[3.25rem] font-black leading-[1.05] tracking-tight text-slate-950 md:text-[4rem] lg:text-[4.5rem] xl:text-[4.9rem] dark:text-white">
+            <h1 className="max-w-4xl text-[3rem] font-black leading-[1.03] tracking-[-0.045em] text-[var(--text)] md:text-[3.8rem] lg:text-[4.25rem] xl:text-[4.6rem]">
               See what your GitHub work actually demonstrates.
             </h1>
-            <p className="mt-8 max-w-2xl text-xl leading-9 text-slate-600 xl:text-[1.35rem] xl:leading-10 dark:text-slate-300">
-              Proofly reads the repository, scores it across six weighted
-              categories, and shows you the exact lines of code behind every
-              claim it makes.
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--muted)] xl:text-xl">
+              Proofly reads the repository, scores how strongly it supports your
+              target career across five portfolio-focused categories, and shows
+              the exact evidence behind every claim.
             </p>
           </div>
 
@@ -202,24 +198,24 @@ export function HomePage() {
           />
         </div>
 
-        <section className="mt-12">
+        <section className="mt-2">
           {repositoriesQuery.isError ? (
             <div
               role="alert"
-              className="rounded-3xl border border-red-100 bg-red-50 p-6 text-red-800 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-200"
+              className="surface border-[var(--error)] bg-[var(--error-soft)] p-5 text-[var(--error)]"
             >
               {(repositoriesQuery.error as Error).message}
             </div>
           ) : null}
 
           {repositoriesQuery.isFetching ? (
-            <div className="rounded-3xl border border-white/80 bg-white/80 p-8 text-slate-600 shadow-soft dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-300">
+            <div className="surface p-6 font-mono text-sm text-[var(--muted)]">
               Reading public repository metadata for @{submittedUsername}…
             </div>
           ) : null}
 
           {repositoriesQuery.isSuccess && repositories.length === 0 ? (
-            <div className="rounded-3xl border border-white/80 bg-white/80 p-8 text-slate-600 shadow-soft dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-300">
+            <div className="surface p-6 text-[var(--muted)]">
               No public owner repositories found for @{submittedUsername}.
             </div>
           ) : null}
@@ -259,29 +255,30 @@ export function HomePage() {
               {portfolioError ? (
                 <div
                   role="alert"
-                  className="mb-6 rounded-3xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-200"
+                  className="mb-6 rounded-[var(--radius)] border border-[var(--warning)] bg-[var(--warning-soft)] p-5 text-sm text-[var(--warning)]"
                 >
                   The overall career score could not be built: {portfolioError}{' '}
                   Repository rankings below are unaffected.
                 </div>
               ) : null}
 
-              <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+              <div className="mb-5 mt-10 flex flex-col gap-3 border-b border-[var(--border)] pb-5 md:flex-row md:items-end md:justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-950 dark:text-white">
+                  <p className="section-kicker mb-2">02 / Repositories</p>
+                  <h2 className="text-2xl font-bold text-[var(--text)]">
                     Ranked repositories for @{repositoriesQuery.data?.username}
                   </h2>
-                  <p className="text-slate-600 dark:text-slate-300">
+                  <p className="technical-label mt-1">
                     Target career: {careerPathLabels[activeCareerPath]}
                   </p>
                 </div>
-                <p className="max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-400">
+                <p className="max-w-xl text-sm leading-6 text-[var(--muted)]">
                   Ranking is an evidence fit, not a hiring score. Forks use only
                   verified contribution paths and languages; run the code
                   analysis to see the evidence-backed 0–10 score.
                 </p>
               </div>
-              <div className="grid gap-5">
+              <div className="grid gap-4">
                 {repositories.map((rankedRepository, index) => (
                   <RepositoryCard
                     key={rankedRepository.repository.id}

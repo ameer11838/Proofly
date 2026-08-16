@@ -10,22 +10,22 @@ export function ScoreBreakdownSection({
 }: ScoreBreakdownSectionProps) {
   return (
     <div className="grid gap-2">
-      <p className="text-sm text-slate-600 dark:text-slate-300">
-        Each category contributes points directly to the Proofly score. The six
+      <p className="text-sm text-[var(--muted)]">
+        Each category contributes points directly to the Proofly score. The five
         categories add up to{' '}
-        <span className="font-semibold text-slate-900 dark:text-slate-100">
+        <span className="font-semibold text-[var(--text)]">
           {breakdown.score.toFixed(1)} / {breakdown.maxScore.toFixed(0)}
         </span>
         .
       </p>
 
-      <div className="grid gap-1">
+      <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
         {breakdown.categories.map((category) => (
           <CategoryRow key={category.key} category={category} />
         ))}
       </div>
 
-      <div className="flex items-center justify-between border-t-2 border-slate-900/10 pt-3 dark:border-slate-100/15 text-sm font-bold text-slate-900 dark:text-slate-100">
+      <div className="flex items-center justify-between pt-3 text-sm font-bold text-[var(--text)]">
         <span>Total</span>
         <span>
           {breakdown.score.toFixed(1)} / {breakdown.maxScore.toFixed(0)}
@@ -45,37 +45,35 @@ function CategoryRow({ category }: { category: ScoreCategory }) {
       summary={category.description}
       badge={
         <span className="flex items-center gap-3">
-          <span className="hidden h-1.5 w-24 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700 sm:block">
+          <span className="hidden h-1 w-24 overflow-hidden bg-[var(--border)] sm:block">
             <span
               className={`block h-full rounded-full ${barColor(percentage)}`}
               style={{ width: `${Math.max(percentage, 2)}%` }}
             />
           </span>
-          <span className="w-16 text-right text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+          <span className="w-16 text-right font-mono text-xs font-semibold tabular-nums text-[var(--text)]">
             {category.earned.toFixed(1)}/{category.max.toFixed(1)}
           </span>
         </span>
       }
     >
-      <ul className="grid gap-2">
+      <ul className="divide-y divide-[var(--border)]">
         {category.signals.map((signal) => (
           <li
             key={signal.label}
-            className="grid gap-1 rounded-xl bg-slate-50 dark:bg-slate-800/60 px-3 py-2 sm:grid-cols-[1fr_auto] sm:items-start sm:gap-4"
+            className="grid gap-1 px-1 py-3 sm:grid-cols-[1fr_auto] sm:items-start sm:gap-4"
           >
             <div>
-              <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+              <p className="text-sm font-medium text-[var(--text)]">
                 {signal.label}
               </p>
-              <p className="text-sm text-slate-600 dark:text-slate-300">
-                {signal.detail}
-              </p>
+              <p className="text-sm text-[var(--muted)]">{signal.detail}</p>
               {signal.evidence.length > 0 ? (
                 <ul className="mt-1.5 flex flex-wrap gap-1.5">
                   {signal.evidence.map((reference, index) => (
                     <li
                       key={`${reference.label}-${reference.path ?? index}`}
-                      className="rounded-full bg-white px-2.5 py-0.5 text-xs text-slate-500 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700"
+                      className="font-mono text-xs text-[var(--muted)]"
                     >
                       {reference.path ?? reference.label}
                       {reference.line ? `:${reference.line}` : ''}
@@ -85,10 +83,10 @@ function CategoryRow({ category }: { category: ScoreCategory }) {
               ) : null}
             </div>
             <span
-              className={`text-sm font-semibold tabular-nums ${
+              className={`font-mono text-xs font-semibold tabular-nums ${
                 signal.earned >= signal.max
-                  ? 'text-emerald-600'
-                  : 'text-slate-400'
+                  ? 'text-[var(--success)]'
+                  : 'text-[var(--muted)]'
               }`}
             >
               {signal.earned.toFixed(1)}/{signal.max.toFixed(1)}
@@ -102,12 +100,12 @@ function CategoryRow({ category }: { category: ScoreCategory }) {
 
 function barColor(percentage: number): string {
   if (percentage >= 75) {
-    return 'bg-emerald-500 dark:bg-emerald-400';
+    return 'bg-[var(--success)]';
   }
 
   if (percentage >= 40) {
-    return 'bg-amber-500 dark:bg-amber-400';
+    return 'bg-[var(--warning)]';
   }
 
-  return 'bg-rose-400 dark:bg-rose-300';
+  return 'bg-[var(--error)]';
 }

@@ -8,10 +8,15 @@ import type {
   RelevanceBand,
   RepositoryAnalysisFinding,
   RepositoryAnalysisResponse,
+  RepositoryCommitEvidence,
   ScoreBreakdown,
   ScoreCategory,
   ScoreCategoryKey,
 } from '@proofly/shared-types';
+import {
+  analyzeCodeQuality,
+  analyzeDevelopmentActivity,
+} from './codeQuality.js';
 import { getCareerSkillMap } from './careerSkillMap.js';
 import { buildCareerRelevance } from './careerRelevance.js';
 import {
@@ -38,16 +43,18 @@ export interface RepositoryAnalysisInput {
   /** Every path in the repository tree, so presence checks are not limited by sampling. */
   treePaths?: string[];
   fileReport?: FileInspectionReport;
+  /** Commits attributable to the analyzed GitHub user. */
+  commitHistory?: RepositoryCommitEvidence[];
+  commitHistoryScope?: string;
   /** Called at each real phase boundary. Never called with estimated values. */
   onProgress?: (event: AnalysisProgressEvent) => void;
 }
 
 const engineeringCategories: ScoreCategoryKey[] = [
-  'documentation',
-  'testing',
-  'ci-automation',
-  'code-structure',
-  'project-completeness',
+  'technical-skills',
+  'creativity-complexity',
+  'project-quality',
+  'presentation',
 ];
 
 export function analyzeRepositoryEvidence({
@@ -57,6 +64,8 @@ export function analyzeRepositoryEvidence({
   totalFiles,
   treePaths,
   fileReport,
+  commitHistory = [],
+  commitHistoryScope,
   onProgress,
 }: RepositoryAnalysisInput): RepositoryAnalysisResponse {
   const report = onProgress ?? (() => {});
@@ -97,6 +106,11 @@ export function analyzeRepositoryEvidence({
     skills,
     categoryWeights['career-relevance'],
   );
+  const codeQuality = analyzeCodeQuality(repository, files);
+  const developmentActivity = analyzeDevelopmentActivity(
+    commitHistory,
+    commitHistoryScope,
+  );
 
   for (const evidence of codeEvidence) {
     report({
@@ -114,11 +128,30 @@ export function analyzeRepositoryEvidence({
     });
   }
 
+  for (const finding of codeQuality.findings.slice(0, 4)) {
+    report({
+      stage: 'extracting-evidence',
+      status: 'active',
+      message: `CODE QUALITY ${finding.kind.toUpperCase()}: ${finding.title.toUpperCase()}`,
+      file: finding.path,
+      evidence: {
+        label:
+          finding.kind === 'strength' ? 'Code strength' : 'Code improvement',
+        detected: finding.title,
+        path: finding.path,
+        startLine: finding.startLine,
+        endLine: finding.endLine,
+      },
+    });
+  }
+
   report({
     stage: 'extracting-evidence',
     status: 'complete',
-    message: `${codeEvidence.length} CODE EVIDENCE SIGNAL(S) EXTRACTED`,
-    counters: { evidenceSignals: codeEvidence.length },
+    message: `${codeEvidence.length + codeQuality.findings.length} SOURCE EVIDENCE SIGNAL(S) EXTRACTED`,
+    counters: {
+      evidenceSignals: codeEvidence.length + codeQuality.findings.length,
+    },
   });
 
   report({
@@ -168,16 +201,21 @@ export function analyzeRepositoryEvidence({
   report({
     stage: 'scoring',
     status: 'active',
-    message: 'SCORING ENGINEERING EVIDENCE ACROSS SIX CATEGORIES...',
+    message: 'SCORING PROJECT EVIDENCE ACROSS FIVE CATEGORIES...',
   });
 
-  const { breakdown, improvementPlan } = buildScoreBreakdown(context);
+  const { breakdown, improvementPlan: scoredImprovementPlan } =
+    buildScoreBreakdown(context);
+  const improvementPlan = addCodeQualityImprovements(
+    scoredImprovementPlan,
+    codeQuality.findings,
+  );
   const engineering = buildEngineeringReport(breakdown);
 
   report({
     stage: 'scoring',
     status: 'complete',
-    message: `PROOFLY SCORE ${breakdown.score.toFixed(1)}/${breakdown.maxScore.toFixed(0)} · ${engineering.score}% ENGINEERING EVIDENCE`,
+    message: `PROOFLY SCORE ${breakdown.score.toFixed(1)}/${breakdown.maxScore.toFixed(0)} · ${engineering.score}% PROJECT STRENGTH`,
   });
 
   report({
@@ -216,12 +254,55 @@ export function analyzeRepositoryEvidence({
     engineering,
     careerRelevance: relevance,
     codeEvidence,
+    codeQuality,
+    developmentActivity,
     improvementPlan,
     fileReport: fileReport ?? fallbackFileReport(paths, totalFiles, files),
     findings,
     suggestions: improvementPlan.actions.map((action) => action.detail),
     analyzedFiles: paths,
     ignoredFilesCount: Math.max(0, totalFiles - files.length),
+  };
+}
+
+function addCodeQualityImprovements(
+  plan: ImprovementPlan,
+  findings: RepositoryAnalysisResponse['codeQuality']['findings'],
+): ImprovementPlan {
+  const severityOrder = { High: 0, Medium: 1, Low: 2 } as const;
+  const codeActions = findings
+    .filter((finding) => finding.kind === 'improvement')
+    .sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity])
+    .slice(0, 5)
+    .map((finding) => ({
+      id: `code-${finding.id}`,
+      title: finding.title,
+      detail: finding.found,
+      category: 'project-quality' as const,
+      points: 0,
+      impact: finding.severity,
+      paths: [
+        `${finding.path}:${finding.startLine}${finding.endLine > finding.startLine ? `–${finding.endLine}` : ''}`,
+      ],
+      suggestedApproach: finding.suggestion,
+      example: finding.example,
+      quickWin: finding.severity === 'Low',
+    }));
+
+  const scoredActions = plan.actions.map((action) => ({
+    ...action,
+    impact:
+      action.impact ??
+      (action.points >= 0.5
+        ? ('High' as const)
+        : action.points >= 0.3
+          ? ('Medium' as const)
+          : ('Low' as const)),
+  }));
+
+  return {
+    ...plan,
+    actions: [...codeActions, ...scoredActions].slice(0, 9),
   };
 }
 
@@ -245,7 +326,7 @@ function buildEngineeringReport(
   return {
     score,
     band: toBand(score),
-    summary: `Engineering evidence scores ${earned.toFixed(1)} of ${max.toFixed(1)} points across documentation, testing, automation, structure, and completeness${
+    summary: `Project strength scores ${earned.toFixed(1)} of ${max.toFixed(1)} non-career points across technical skills, creativity and complexity, project quality, and presentation${
       strongest && weakest && strongest.key !== weakest.key
         ? `. Strongest area is ${strongest.label.toLowerCase()}, weakest is ${weakest.label.toLowerCase()}`
         : ''
@@ -376,7 +457,7 @@ function summarizeRating(
     (a, b) => b.earned / b.max - a.earned / a.max,
   )[0];
 
-  return `${repository.name} scores ${breakdown.score.toFixed(1)}/${maxScore.toFixed(0)}: ${engineering.score}% engineering evidence and ${relevanceScore}% ${relevanceLabel.toLowerCase()}${
+  return `${repository.name} scores ${breakdown.score.toFixed(1)}/${maxScore.toFixed(0)}: ${engineering.score}% project strength and ${relevanceScore}% ${relevanceLabel.toLowerCase()}${
     strongest ? `, carried most by ${strongest.label.toLowerCase()}` : ''
   }. Every point comes from the category breakdown below.`;
 }
@@ -411,19 +492,22 @@ function fallbackFileReport(
   };
 }
 
-function ratingLabel(
+export function ratingLabel(
   score: number,
 ): RepositoryAnalysisResponse['rating']['label'] {
-  if (score >= 8) {
-    return 'Excellent';
+  if (score >= 9) {
+    return 'Exceptional';
   }
-  if (score >= 6) {
+  if (score >= 7) {
     return 'Strong';
   }
-  if (score >= 4) {
+  if (score >= 5) {
+    return 'Solid';
+  }
+  if (score >= 3) {
     return 'Developing';
   }
-  return 'Early';
+  return 'Starting';
 }
 
 function toBand(score: number): RelevanceBand {

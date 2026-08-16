@@ -3,16 +3,138 @@
 @tailwind utilities;
 
 :root {
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-sans);
+  color-scheme: light;
+  --page: #f6f8fa;
+  --surface: #ffffff;
+  --surface-subtle: #f3f4f6;
+  --surface-raised: #eaeef2;
+  --surface-strong: #eef2f6;
+  --border: #d0d7de;
+  --border-strong: #8c959f;
+  --text: #1f2328;
+  --muted: #57606a;
+  --accent: #0969da;
+  --accent-hover: #0550ae;
+  --accent-soft: #ddf4ff;
+  --success: #1a7f37;
+  --success-soft: #dafbe1;
+  --warning: #9a6700;
+  --warning-soft: #fff8c5;
+  --error: #cf222e;
+  --error-soft: #ffebe9;
+  --radius: 8px;
+  --radius-sm: 6px;
+  --shadow-subtle: 0 1px 2px rgba(31, 35, 40, 0.06);
 }
 
 body {
   margin: 0;
-  /* Painted so overscroll past the app surface matches the active theme. */
-  background-color: #f8fafc;
+  background-color: var(--page);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-.dark body {
-  background-color: #020617;
+html {
+  font-size: 17px;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.dark {
+  color-scheme: dark;
+  --page: #0d1117;
+  --surface: #161b22;
+  --surface-subtle: #1c2128;
+  --surface-raised: #262c36;
+  --surface-strong: #21262d;
+  --border: #30363d;
+  --border-strong: #6e7681;
+  --text: #f0f6fc;
+  --muted: #b1bac4;
+  --accent: #58a6ff;
+  --accent-hover: #79c0ff;
+  --accent-soft: #1b365d;
+  --success: #3fb950;
+  --success-soft: #173b24;
+  --warning: #d29922;
+  --warning-soft: #3b2e12;
+  --error: #f85149;
+  --error-soft: #4c1f24;
+  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.38);
+}
+
+@layer components {
+  .surface {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow-subtle);
+  }
+
+  .surface-subtle {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-subtle);
+  }
+
+  .section-kicker {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 1.5;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .technical-label {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    line-height: 1.5;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .primary-action {
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    color: white;
+    transition:
+      background-color 160ms ease,
+      transform 160ms ease;
+  }
+
+  .primary-action:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
+
+  .primary-action:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  .focus-control:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--accent) 65%, transparent);
+    outline-offset: 2px;
+  }
 }

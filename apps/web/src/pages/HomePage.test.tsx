@@ -97,7 +97,7 @@ const portfolio = {
     'Client data fetching',
   ],
   portfolioStrengths: ['3 strong career-relevant repositories'],
-  mainGaps: ['testing', 'ci/cd and automation'],
+  mainGaps: ['project quality', 'presentation'],
   contributors: [
     {
       name: 'react-dashboard',

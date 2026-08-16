@@ -12,18 +12,22 @@ Proofly is organized as a monorepo with separate applications and reusable packa
 - `packages/shared-types`: API contracts and domain types shared by the frontend and backend.
 - `packages/analysis-core`: deterministic career relevance and evidence primitives.
 
-## Current MVP boundary
+## Current product boundary
 
-The first vertical slice intentionally avoids authentication, persistence, Gemini, and deep repository source-code analysis. It proves the product loop:
+Proofly currently avoids authentication, persistence, and AI-generated scoring. It implements
+this deterministic product loop:
 
 1. Enter a GitHub username.
 2. Select a target career.
 3. Fetch public repositories through the backend.
 4. Verify fork authorship across all branches, then rank repositories with documented
    deterministic evidence signals.
-5. Display loading, empty, and error states in a polished frontend.
+5. Download a bounded, inspectable source sample and analyze career evidence, code quality,
+   readability/documentation, and attributable commit history.
+6. Display the score, strengths, weaknesses, source fragments, development activity, and a
+   prioritized improvement plan in an interactive report.
 
-## Future analysis pipeline
+## Analysis pipeline
 
 The deeper repository analysis should be implemented as separate modules:
 
@@ -31,9 +35,8 @@ The deeper repository analysis should be implemented as separate modules:
 2. Repository filtering.
 3. Deterministic static analysis.
 4. Evidence package creation.
-5. AI explanation.
-6. Structured response validation.
-7. API controller response.
+5. Deterministic explanation and prioritized feedback.
+6. Structured API response.
 
 Gemini should receive only filtered evidence and selected excerpts, never a whole unfiltered repository.
 

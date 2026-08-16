@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { GitHubRepository } from '@proofly/shared-types';
 import {
   analyzeRepositoryEvidence,
+  ratingLabel,
   type RepositoryFileEvidence,
 } from './repositoryAnalysis.js';
 import { maxScore, sumPoints } from './scoreModel.js';
@@ -94,13 +95,22 @@ function analyze(
 }
 
 describe('analyzeRepositoryEvidence', () => {
+  it('uses the portfolio-oriented Starting through Exceptional scale', () => {
+    expect(ratingLabel(1)).toBe('Starting');
+    expect(ratingLabel(2.9)).toBe('Starting');
+    expect(ratingLabel(3)).toBe('Developing');
+    expect(ratingLabel(5)).toBe('Solid');
+    expect(ratingLabel(7)).toBe('Strong');
+    expect(ratingLabel(9)).toBe('Exceptional');
+  });
+
   it('produces a score that its categories add up to', () => {
     const result = analyze('backend-engineering');
     const categoryTotal = sumPoints(
       result.breakdown.categories.map((category) => category.earned),
     );
 
-    expect(result.breakdown.categories).toHaveLength(6);
+    expect(result.breakdown.categories).toHaveLength(5);
     expect(categoryTotal).toBe(result.breakdown.score);
     expect(result.rating.score).toBe(result.breakdown.score);
     expect(
@@ -123,7 +133,7 @@ describe('analyzeRepositoryEvidence', () => {
     }
   });
 
-  it('reports engineering evidence and career relevance as separate scores', () => {
+  it('reports project strength and career relevance as separate scores', () => {
     const backend = analyze('backend-engineering');
     const quant = analyze('quantitative-development');
 
@@ -159,6 +169,39 @@ describe('analyzeRepositoryEvidence', () => {
 
       expect(evidence.githubUrl).toContain(`/blob/main/${evidence.path}`);
     }
+  });
+
+  it('returns source-backed code quality and attributable development activity', () => {
+    const result = analyzeRepositoryEvidence({
+      repository,
+      careerPath: 'backend-engineering',
+      files,
+      totalFiles: treePaths.length,
+      treePaths,
+      commitHistoryScope: 'default branch (main)',
+      commitHistory: [
+        {
+          sha: 'a'.repeat(40),
+          message: 'Add guarded user lookup endpoint',
+          committedAt: '2026-08-01T00:00:00Z',
+          htmlUrl: `${repository.htmlUrl}/commit/${'a'.repeat(40)}`,
+        },
+      ],
+    });
+
+    expect(result.codeQuality.dimensions).toHaveLength(5);
+    expect(result.codeQuality.findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: 'src/server.ts',
+          title: 'Explicit failure path',
+          kind: 'strength',
+        }),
+      ]),
+    );
+    expect(result.developmentActivity.commitCount).toBe(1);
+    expect(result.developmentActivity.scope).toBe('default branch (main)');
+    expect(result.developmentActivity.commits[0]?.quality).toBe('clear');
   });
 
   it('grounds career relevance in dependencies and code rather than generic words', () => {
@@ -214,21 +257,43 @@ describe('analyzeRepositoryEvidence', () => {
     });
 
     const testAction = result.improvementPlan.actions.find(
-      (action) => action.category === 'testing',
+      (action) => action.title === 'Add automated tests',
     );
     expect(testAction?.detail).toContain('src/server.ts');
 
-    const ciAction = result.improvementPlan.actions.find(
-      (action) => action.category === 'ci-automation',
+    expect(
+      result.breakdown.categories
+        .find((category) => category.key === 'project-quality')
+        ?.signals.some((signal) => signal.label === 'CI/CD and automation'),
+    ).toBe(true);
+  });
+
+  it('keeps a substantive student project solid without tests or CI', () => {
+    const result = analyzeRepositoryEvidence({
+      repository,
+      careerPath: 'backend-engineering',
+      files: files.filter(
+        (file) =>
+          !file.path.includes('test') && !file.path.includes('workflows'),
+      ),
+      totalFiles: 3,
+      treePaths: ['README.md', 'package.json', 'src/server.ts'],
+    });
+    const quality = result.breakdown.categories.find(
+      (category) => category.key === 'project-quality',
     );
-    expect(ciAction?.detail).toContain('.github/workflows/ci.yml');
+
+    expect(result.rating.score).toBeGreaterThanOrEqual(5);
+    expect(result.rating.score).toBeLessThan(9);
+    expect(quality?.earned).toBeGreaterThan(0);
+    expect(quality?.earned).toBeLessThan(quality?.max ?? 0);
   });
 
   it('keeps the legacy findings and file counters populated', () => {
     const result = analyze('backend-engineering');
 
     expect(
-      result.findings.some((finding) => finding.category === 'Testing'),
+      result.findings.some((finding) => finding.category === 'Project Quality'),
     ).toBe(true);
     expect(result.analyzedFiles).toContain('README.md');
     expect(result.fileReport.analyzedCount).toBe(files.length);
