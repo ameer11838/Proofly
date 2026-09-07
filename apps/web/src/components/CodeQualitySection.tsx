@@ -4,11 +4,11 @@ import { Collapsible } from './Collapsible.js';
 export function CodeQualitySection({ report }: { report: CodeQualityReport }) {
   return (
     <div className="grid gap-4">
-      <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--border)] pb-4">
+      <div className="flex flex-wrap items-end justify-between gap-3 border-b-2 border-dashed border-[var(--hair)] pb-4">
         <div>
-          <p className="field-label">Code quality</p>
+          <p className="label-mono">Code quality</p>
           <p className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-3xl font-semibold tabular-nums text-[var(--text)]">
+            <span className="display text-5xl tabular-nums text-[var(--ink)]">
               {report.score.toFixed(1)}
             </span>
             <span className="text-sm text-[var(--muted)]">/ 10</span>
@@ -32,9 +32,9 @@ export function CodeQualitySection({ report }: { report: CodeQualityReport }) {
             }
           >
             <div className="grid gap-3">
-              <div className="h-1 overflow-hidden bg-[var(--border)]">
+              <div className="h-2.5 overflow-hidden rounded-full border-2 border-[var(--line)] bg-[var(--surface-2)]">
                 <div
-                  className="h-full bg-[var(--accent)]"
+                  className="h-full bg-[var(--brand)]"
                   style={{ width: `${dimension.score * 10}%` }}
                 />
               </div>
@@ -47,9 +47,9 @@ export function CodeQualitySection({ report }: { report: CodeQualityReport }) {
                     .map((finding) => (
                       <li
                         key={finding.id}
-                        className={`grid gap-1 rounded-[var(--radius-sm)] border-l-4 px-4 py-3 text-sm ${qualityFindingSurface(finding.kind, finding.title)}`}
+                        className={`grid gap-1 rounded-[var(--radius)] border-2 border-l-[6px] border-[var(--line)] px-3.5 py-2.5 text-sm ${qualityFindingSurface(finding.kind, finding.title)}`}
                       >
-                        <p className="font-medium text-[var(--text)]">
+                        <p className="font-medium text-[var(--ink)]">
                           {finding.title}
                         </p>
                         <p className="font-mono text-xs text-[var(--muted)]">
@@ -77,7 +77,7 @@ function qualityFindingSurface(kind: string, title: string): string {
     return 'border-[var(--success)] bg-[var(--success-soft)]';
   }
   if (/credential|unsafe|sql|silenced error/i.test(title)) {
-    return 'border-[var(--error)] bg-[var(--error-soft)]';
+    return 'border-[var(--danger)] bg-[var(--danger-soft)]';
   }
   return 'border-[var(--warning)] bg-[var(--warning-soft)]';
 }

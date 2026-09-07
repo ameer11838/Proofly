@@ -20,6 +20,7 @@ import {
 } from '../lib/portfolioProgress.js';
 import { useTheme } from '../lib/useTheme.js';
 import { CareerScoreCard } from '../components/CareerScoreCard.js';
+import { CareerTrackStrip } from '../components/CareerTrackStrip.js';
 import { PortfolioProgress } from '../components/PortfolioProgress.js';
 import { ProfileSummary } from '../components/ProfileSummary.js';
 import { RepositoryCard } from '../components/RepositoryCard.js';
@@ -147,16 +148,19 @@ export function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--page)] px-5 py-5 text-[var(--text)] sm:px-8 lg:px-10">
+    <main className="min-h-screen px-5 py-5 text-[var(--ink)] sm:px-8 lg:px-10">
       <section className="mx-auto max-w-6xl">
-        <nav className="flex items-center justify-between gap-4 border-b border-[var(--border)] pb-4">
+        <nav className="card mb-10 flex items-center justify-between gap-4 px-4 py-2.5">
           <div className="flex items-center gap-2.5">
             <img
-              className="size-8 object-contain"
+              className="size-7 object-contain"
               src="/proofly-logo.svg"
               alt=""
             />
-            <p className="text-base font-semibold">Proofly</p>
+            <p className="display text-xl">Proofly</p>
+            <span className="label-mono hidden sm:inline">
+              portfolio evidence
+            </span>
           </div>
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
         </nav>
@@ -165,19 +169,29 @@ export function HomePage() {
             arrive, so it stops competing with them. */}
         <div
           className={`grid gap-8 py-10 lg:grid-cols-[1fr_25rem] lg:items-center lg:gap-16 ${
-            submittedUsername ? 'lg:py-10' : 'lg:py-24'
+            submittedUsername ? 'lg:py-10' : 'lg:py-16'
           }`}
         >
           <div>
+            <p className="eyebrow mb-5">Evidence, not vibes</p>
             {/* Scales with the viewport so it neither shouts on a desktop nor
-                shrinks to body copy on a laptop; `text-balance` keeps the line
-                breaks even at every width instead of leaving a short last line. */}
-            <h1 className="text-balance text-[clamp(2.125rem,1.4rem+2.1vw,3.125rem)] font-semibold leading-[1.12] tracking-[-0.02em] text-[var(--text)]">
-              Score your GitHub repositories against a career track.
+                shrinks to body copy on a laptop. */}
+            <h1 className="display text-balance text-[clamp(2.5rem,1.4rem+3.2vw,4.25rem)] text-[var(--ink)]">
+              Score your GitHub against{' '}
+              <span className="relative inline-block">
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-x-[-0.15em] bottom-[0.06em] top-[0.16em] -rotate-1 rounded-[3px] bg-[var(--accent)]"
+                />
+                <span className="relative text-[var(--accent-ink)]">
+                  the job
+                </span>
+              </span>{' '}
+              you want.
             </h1>
-            <p className="mt-5 max-w-measure-tight text-lg text-[var(--muted)]">
+            <p className="mt-6 max-w-measure-tight text-lg text-[var(--muted)]">
               Every score links back to the file and line it came from, so you
-              can see what it was based on.
+              can see exactly what it was based on.
             </p>
           </div>
 
@@ -191,24 +205,28 @@ export function HomePage() {
           />
         </div>
 
+        {!submittedUsername ? (
+          <CareerTrackStrip value={careerPath} onChange={setCareerPath} />
+        ) : null}
+
         <section className="mt-2">
           {repositoriesQuery.isError ? (
             <div
               role="alert"
-              className="surface border-[var(--error)] bg-[var(--error-soft)] p-5 text-[var(--error)]"
+              className="card bg-[var(--danger-soft)] p-4 font-semibold text-[var(--danger)]"
             >
               {(repositoriesQuery.error as Error).message}
             </div>
           ) : null}
 
           {repositoriesQuery.isFetching ? (
-            <div className="surface p-5 text-sm text-[var(--muted)]">
+            <div className="card p-4 font-mono text-sm">
               Reading public repositories for @{submittedUsername}…
             </div>
           ) : null}
 
           {repositoriesQuery.isSuccess && repositories.length === 0 ? (
-            <div className="surface p-5 text-sm text-[var(--muted)]">
+            <div className="card p-4 text-sm">
               @{submittedUsername} has no public repositories of their own.
             </div>
           ) : null}
@@ -248,20 +266,21 @@ export function HomePage() {
               {portfolioError ? (
                 <div
                   role="alert"
-                  className="mb-6 rounded-[var(--radius)] border border-[var(--warning)] bg-[var(--warning-soft)] p-5 text-sm text-[var(--warning)]"
+                  className="card mb-6 bg-[var(--warning-soft)] p-4 text-sm text-[var(--warning)]"
                 >
                   Could not build the overall career score: {portfolioError}{' '}
                   The rankings below are unaffected.
                 </div>
               ) : null}
 
-              <div className="mb-4 mt-10 flex flex-col gap-3 border-b border-[var(--border)] pb-4 md:flex-row md:items-end md:justify-between">
+              <div className="mb-5 mt-12 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold tracking-tight text-[var(--text)]">
-                    Ranked repositories for @{repositoriesQuery.data?.username}
+                  <h2 className="display text-3xl text-[var(--ink)]">
+                    Ranked repositories
                   </h2>
-                  <p className="field-label mt-1">
-                    Target career: {careerPathLabels[activeCareerPath]}
+                  <p className="label-mono mt-1.5">
+                    @{repositoriesQuery.data?.username} ·{' '}
+                    {careerPathLabels[activeCareerPath]}
                   </p>
                 </div>
                 <p className="max-w-measure-tight text-sm text-[var(--muted)]">
@@ -269,7 +288,7 @@ export function HomePage() {
                   repository to score it from its source.
                 </p>
               </div>
-              <div className="grid gap-4">
+              <div className="grid gap-5">
                 {repositories.map((rankedRepository, index) => (
                   <RepositoryCard
                     key={rankedRepository.repository.id}

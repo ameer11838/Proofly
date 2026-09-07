@@ -239,9 +239,12 @@ describe('HomePage', () => {
     await waitFor(() => {
       expect(screen.getByText('react-dashboard')).toBeInTheDocument();
     });
+    // The results header names the user and the career it was scored against.
+    // Scoped to that heading, since the progress panel prints the same pair.
     expect(
-      screen.getByText(/target career: frontend engineering/i),
-    ).toBeInTheDocument();
+      screen.getByRole('heading', { name: /ranked repositories/i })
+        .parentElement,
+    ).toHaveTextContent(/@octocat\s*·\s*Frontend engineering/i);
     expect(screen.getByText('The Octocat')).toBeInTheDocument();
     expect(screen.getByText(/why this ranks here/i)).toBeInTheDocument();
     expect(

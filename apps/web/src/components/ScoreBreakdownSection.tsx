@@ -13,21 +13,21 @@ export function ScoreBreakdownSection({
       <p className="text-sm text-[var(--muted)]">
         Each category contributes points directly to the Proofly score. The five
         categories add up to{' '}
-        <span className="font-semibold text-[var(--text)]">
+        <span className="font-semibold text-[var(--ink)]">
           {breakdown.score.toFixed(1)} / {breakdown.maxScore.toFixed(0)}
         </span>
         .
       </p>
 
-      <div className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
+      <div className="grid gap-2">
         {breakdown.categories.map((category) => (
           <CategoryRow key={category.key} category={category} />
         ))}
       </div>
 
-      <div className="flex items-center justify-between pt-3 text-sm font-bold text-[var(--text)]">
-        <span>Total</span>
-        <span>
+      <div className="card-inset mt-1 flex items-center justify-between px-3 py-2">
+        <span className="label-mono text-[var(--ink)]">Total</span>
+        <span className="display text-lg tabular-nums">
           {breakdown.score.toFixed(1)} / {breakdown.maxScore.toFixed(0)}
         </span>
       </div>
@@ -45,26 +45,26 @@ function CategoryRow({ category }: { category: ScoreCategory }) {
       summary={category.description}
       badge={
         <span className="flex items-center gap-3">
-          <span className="hidden h-1 w-24 overflow-hidden bg-[var(--border)] sm:block">
+          <span className="hidden h-2.5 w-24 overflow-hidden rounded-full border-2 border-[var(--line)] bg-[var(--surface-2)] sm:block">
             <span
-              className={`block h-full rounded-full ${barColor(percentage)}`}
+              className={`block h-full ${barColor(percentage)}`}
               style={{ width: `${Math.max(percentage, 2)}%` }}
             />
           </span>
-          <span className="w-16 text-right font-mono text-xs font-semibold tabular-nums text-[var(--text)]">
+          <span className="w-16 text-right font-mono text-xs font-bold tabular-nums text-[var(--ink)]">
             {category.earned.toFixed(1)}/{category.max.toFixed(1)}
           </span>
         </span>
       }
     >
-      <ul className="divide-y divide-[var(--border)]">
+      <ul className="divide-y divide-[var(--hair)]">
         {category.signals.map((signal) => (
           <li
             key={signal.label}
             className="grid gap-1 px-1 py-3 sm:grid-cols-[1fr_auto] sm:items-start sm:gap-4"
           >
             <div>
-              <p className="text-sm font-medium text-[var(--text)]">
+              <p className="text-sm font-medium text-[var(--ink)]">
                 {signal.label}
               </p>
               <p className="text-sm text-[var(--muted)]">{signal.detail}</p>
@@ -107,5 +107,5 @@ function barColor(percentage: number): string {
     return 'bg-[var(--warning)]';
   }
 
-  return 'bg-[var(--error)]';
+  return 'bg-[var(--danger)]';
 }

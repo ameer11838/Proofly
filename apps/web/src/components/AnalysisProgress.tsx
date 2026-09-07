@@ -50,37 +50,37 @@ export function AnalysisProgress({
       // Announced politely so the stage changes reach screen readers without flooding them.
       aria-live="polite"
       aria-busy={completion === undefined}
-      className="surface mt-4 overflow-hidden"
+      className="card-flat mt-4 overflow-hidden"
     >
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-[var(--line)] bg-[var(--surface-2)] px-4 py-3">
         <div className="flex items-center gap-2.5">
           <StatusDot done={completion !== undefined} />
-          <h3 className="text-sm font-semibold text-[var(--text)]">
+          <h3 className="display text-base text-[var(--ink)]">
             {completion ? 'Analysis complete' : 'Analyzing repository'}
           </h3>
           <span className="truncate font-mono text-xs text-[var(--muted)]">
             {repositoryFullName} · {careerLabel}
           </span>
         </div>
-        <span className="text-xs tabular-nums text-[var(--muted)]">
+        <span className="pill bg-[var(--accent)] text-[var(--accent-ink)] tabular-nums">
           {percent}%
         </span>
       </header>
 
       {/* Progress bar: width is driven only by reported stage completion. */}
-      <div className="h-0.5 bg-[var(--surface-raised)]">
+      <div className="h-2 border-b-2 border-[var(--line)] bg-[var(--surface-3)]">
         <div
           role="progressbar"
           aria-valuenow={percent}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-label="Analysis progress"
-          className="h-full bg-[var(--accent)] transition-[width] duration-500 ease-out motion-reduce:transition-none"
+          className="h-full bg-[var(--brand)] transition-[width] duration-500 ease-out motion-reduce:transition-none"
           style={{ width: `${Math.max(percent, 1)}%` }}
         />
       </div>
 
-      <div className="grid gap-px bg-[var(--border)] md:grid-cols-2">
+      <div className="grid gap-0 divide-y-2 divide-dashed divide-[var(--hair)] md:grid-cols-2 md:divide-x-2 md:divide-y-0">
         <ol className="grid content-start gap-2 bg-[var(--surface)] p-4">
           {state.stages.map((stage) => (
             <StageRow key={stage.stage} stage={stage} />
@@ -90,7 +90,7 @@ export function AnalysisProgress({
         <div className="bg-[var(--surface)] p-4">
           <div
             ref={logRef}
-            className="h-40 overflow-y-auto rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface-subtle)] p-3 font-mono text-xs leading-6"
+            className="card-inset h-40 overflow-y-auto p-3 font-mono text-xs leading-6"
           >
             {tail.length === 0 ? (
               <p className="text-[var(--muted)]">Waiting for the first result…</p>
@@ -98,7 +98,7 @@ export function AnalysisProgress({
               tail.map((line) => (
                 <p
                   key={line.id}
-                  className="break-all text-[var(--muted)] last:text-[var(--text)] motion-safe:animate-riseIn"
+                  className="break-all text-[var(--muted)] last:text-[var(--ink)] motion-safe:animate-riseIn"
                 >
                   {line.message}
                 </p>
@@ -107,14 +107,14 @@ export function AnalysisProgress({
           </div>
 
           {state.evidence.length > 0 ? (
-            <div className="mt-3 rounded-[var(--radius-sm)] border border-[var(--border)] p-3">
-              <p className="field-label font-medium text-[var(--text)]">
+            <div className="card-inset mt-3 p-3">
+              <p className="label-mono font-medium text-[var(--ink)]">
                 Evidence found
               </p>
               <ul className="mt-2 grid gap-2">
                 {state.evidence.map((item) => (
                   <li key={`${item.path}-${item.startLine}-${item.detected}`}>
-                    <p className="truncate text-xs text-[var(--text)]">
+                    <p className="truncate text-xs text-[var(--ink)]">
                       {item.detected}
                     </p>
                     <p className="truncate font-mono text-xs text-[var(--muted)]">
@@ -128,7 +128,7 @@ export function AnalysisProgress({
         </div>
       </div>
 
-      <footer className="flex flex-wrap gap-x-5 gap-y-1 border-t border-[var(--border)] px-4 py-2.5 text-xs text-[var(--muted)]">
+      <footer className="flex flex-wrap gap-x-5 gap-y-1 border-t-2 border-[var(--line)] bg-[var(--surface-2)] px-4 py-2.5 text-xs text-[var(--muted)]">
         {completion ? (
           <>
             <Counter value={completion.filesAnalyzed} label="files analyzed" />
@@ -170,7 +170,7 @@ export function StatusDot({ done }: { done: boolean }) {
       className={`size-2 shrink-0 rounded-full ${
         done
           ? 'bg-[var(--success)]'
-          : 'bg-[var(--accent)] motion-safe:animate-pulseDot'
+          : 'bg-[var(--brand)] motion-safe:animate-pulseDot'
       }`}
     />
   );
@@ -188,18 +188,18 @@ function StageRow({ stage }: { stage: StageState }) {
           isComplete
             ? 'bg-[var(--success)]'
             : isActive
-              ? 'bg-[var(--accent)]'
-              : 'bg-[var(--border)]'
+              ? 'bg-[var(--brand)]'
+              : 'bg-[var(--hair)]'
         }`}
       />
       <div className="min-w-0">
         <p
           className={`text-sm ${
             isActive
-              ? 'font-medium text-[var(--text)]'
+              ? 'font-medium text-[var(--ink)]'
               : isComplete
                 ? 'text-[var(--muted)]'
-                : 'text-[var(--border-strong)]'
+                : 'text-[var(--line)]'
           }`}
         >
           {analysisStageLabels[stage.stage]}
@@ -220,7 +220,7 @@ function StageRow({ stage }: { stage: StageState }) {
 function Counter({ value, label }: { value: number | string; label: string }) {
   return (
     <span>
-      <span className="font-medium tabular-nums text-[var(--text)]">
+      <span className="font-medium tabular-nums text-[var(--ink)]">
         {value}
       </span>{' '}
       {label}

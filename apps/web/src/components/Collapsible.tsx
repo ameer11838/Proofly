@@ -21,14 +21,12 @@ export function Collapsible({
 }: CollapsibleProps) {
   return (
     <details
-      className="group my-2 overflow-hidden rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)]"
+      className="card-flat group my-2.5 overflow-hidden"
       open={defaultOpen}
     >
-      <summary className="focus-control flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 outline-none hover:bg-[var(--surface-raised)]">
+      <summary className="focus-control flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 outline-none transition-colors hover:bg-[var(--surface-2)] group-open:border-b-2 group-open:border-[var(--line)] group-open:bg-[var(--surface-2)]">
         <span className="flex min-w-0 flex-col">
-          <span className="text-sm font-semibold text-[var(--text)]">
-            {title}
-          </span>
+          <span className="display text-base text-[var(--ink)]">{title}</span>
           {summary ? (
             <span className="mt-0.5 text-xs leading-5 text-[var(--muted)]">
               {summary}
@@ -38,7 +36,7 @@ export function Collapsible({
         <span className="flex shrink-0 items-center gap-3">
           {badge}
           <svg
-            className="size-4 shrink-0 text-[var(--muted)] transition-transform duration-200 group-open:rotate-180"
+            className="size-4 shrink-0 text-[var(--ink)] transition-transform duration-200 group-open:rotate-180"
             viewBox="0 0 16 16"
             fill="none"
             aria-hidden="true"
@@ -53,9 +51,7 @@ export function Collapsible({
           </svg>
         </span>
       </summary>
-      <div className="border-t border-[var(--border)] px-4 py-4">
-        {children}
-      </div>
+      <div className="px-4 py-4">{children}</div>
     </details>
   );
 }

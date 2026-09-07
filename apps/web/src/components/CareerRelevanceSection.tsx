@@ -45,9 +45,9 @@ export function CareerRelevanceSection({
         return (
           <section key={group.strength}>
             <div className="flex flex-wrap items-baseline gap-x-2">
-              <h4 className="flex items-center gap-2 text-sm font-semibold text-[var(--text)]">
+              <h4 className="flex items-center gap-2 text-sm font-semibold text-[var(--ink)]">
                 <span
-                  className={`size-2 rounded-full ${dotColor(group.strength)}`}
+                  className={`size-2.5 rounded-full border-2 border-[var(--line)] ${dotColor(group.strength)}`}
                   aria-hidden="true"
                 />
                 {group.title}
@@ -57,7 +57,7 @@ export function CareerRelevanceSection({
               </h4>
               <p className="text-xs text-[var(--muted)]">{group.blurb}</p>
             </div>
-            <ul className="mt-2 grid border-y border-[var(--border)] md:grid-cols-2">
+            <ul className="mt-2 grid overflow-hidden rounded-[var(--radius)] border-2 border-[var(--line)] md:grid-cols-2">
               {skills.map((skill) => (
                 <SkillCard key={skill.id} skill={skill} />
               ))}
@@ -72,13 +72,11 @@ export function CareerRelevanceSection({
 function SkillCard({ skill }: { skill: SkillEvidence }) {
   return (
     <li
-      className={`border-b border-[var(--border)] px-3 py-4 md:odd:border-r ${cardColor(skill.strength)}`}
+      className={`border-b-2 border-[var(--hair)] px-3 py-3.5 last:border-b-0 md:odd:border-r-2 ${cardColor(skill.strength)}`}
     >
       <div className="flex items-baseline justify-between gap-2">
-        <p className="text-sm font-semibold text-[var(--text)]">
-          {skill.label}
-        </p>
-        <span className="field-label shrink-0">
+        <p className="text-sm font-bold text-[var(--ink)]">{skill.label}</p>
+        <span className="label-mono shrink-0">
           weight {skill.weight}
         </span>
       </div>
@@ -87,7 +85,7 @@ function SkillCard({ skill }: { skill: SkillEvidence }) {
       {skill.matchedSignals.length > 0 ? (
         <ul className="mt-2 grid gap-1">
           {skill.matchedSignals.slice(0, 3).map((signal) => (
-            <li key={signal} className="text-xs text-[var(--text)]">
+            <li key={signal} className="text-xs text-[var(--ink)]">
               <span className="text-[var(--success)]" aria-hidden="true">
                 ✓
               </span>{' '}
@@ -113,7 +111,7 @@ function dotColor(strength: EvidenceStrength): string {
     return 'bg-[var(--warning)]';
   }
 
-  return 'bg-[var(--border-strong)]';
+  return 'bg-[var(--line)]';
 }
 
 function cardColor(strength: EvidenceStrength): string {
@@ -125,5 +123,5 @@ function cardColor(strength: EvidenceStrength): string {
     return 'bg-[var(--warning-soft)]/40';
   }
 
-  return 'bg-[var(--surface-subtle)]';
+  return 'bg-[var(--surface-2)]';
 }

@@ -5,6 +5,11 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        display: ['Bricolage Grotesque', 'Inter', 'sans-serif'],
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+      },
       /**
        * The scale is tuned one step up from Tailwind's default: this is a reading
        * interface, and its report prose sits on `sm`/`base` while `xs` is reserved

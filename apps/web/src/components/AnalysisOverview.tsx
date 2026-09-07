@@ -15,7 +15,7 @@ export function AnalysisOverview({
   const priority = analysis.improvementPlan.actions[0];
 
   return (
-    <div className="grid gap-px bg-[var(--border)] md:grid-cols-2">
+    <div className="grid divide-y-2 divide-dashed divide-[var(--hair)] border-b-2 border-[var(--line)] md:grid-cols-2 md:divide-x-2">
       <SummaryBlock title="Strengths" tone="positive">
         {strengths.length > 0 ? (
           strengths.map((finding) => (
@@ -79,14 +79,14 @@ function SummaryBlock({
   const colors = {
     positive: 'bg-[var(--success)]',
     warning: 'bg-[var(--warning)]',
-    neutral: 'bg-[var(--accent)]',
+    neutral: 'bg-[var(--brand)]',
   };
   return (
     <section className="grid min-w-0 content-start gap-3 bg-[var(--surface)] p-4">
-      <h3 className="flex items-center gap-2 field-label font-medium text-[var(--text)]">
+      <h3 className="label-mono flex items-center gap-2 text-[var(--ink)]">
         <span
           aria-hidden="true"
-          className={`size-1.5 rounded-full ${colors[tone]}`}
+          className={`size-2.5 rounded-full border-2 border-[var(--line)] ${colors[tone]}`}
         />
         {title}
       </h3>
@@ -107,7 +107,7 @@ function SummaryLine({
 }) {
   return (
     <div className="min-w-0">
-      <p className="text-sm font-medium text-[var(--text)]">{title}</p>
+      <p className="text-sm font-semibold text-[var(--ink)]">{title}</p>
       <p
         className={`mt-1 text-xs text-[var(--muted)] ${
           mono ? 'truncate font-mono' : 'leading-5'

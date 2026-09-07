@@ -23,7 +23,7 @@ export function CodeFragment({
   return (
     // Deliberately dark in both themes: a code surface reads as code. The border gives it
     // an edge against the light card and against the dark page background alike.
-    <div className="overflow-x-auto rounded-[7px] border border-[#30363d] bg-[#0d1117] py-4 text-sm leading-7 shadow-inner">
+    <div className="overflow-x-auto rounded-[var(--radius)] border-2 border-[var(--line)] bg-[#12101a] py-4 text-sm leading-7">
       <pre className="min-w-max font-mono">
         <code>
           {lines.map((line, index) => {
@@ -33,7 +33,7 @@ export function CodeFragment({
             return (
               <div
                 key={lineNumber}
-                className={`flex gap-4 border-l-2 px-4 ${isMatch ? 'border-[#58a6ff] bg-[#1b365d]' : 'border-transparent'}`}
+                className={`flex gap-4 border-l-[3px] px-4 ${isMatch ? 'border-[#d6f84c] bg-[#2a2140]' : 'border-transparent'}`}
               >
                 <span
                   className={`w-10 shrink-0 select-none text-right ${

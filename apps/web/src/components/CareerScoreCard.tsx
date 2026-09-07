@@ -19,21 +19,21 @@ export function CareerScoreCard({ portfolio }: CareerScoreCardProps) {
   const { coverage } = portfolio;
 
   return (
-    <section className="surface mb-6 overflow-hidden">
-      <div className="grid gap-8 border-b border-[var(--border)] p-5 lg:grid-cols-[15rem_minmax(0,1fr)] lg:p-6">
-        <div className="lg:border-r lg:border-[var(--border)] lg:pr-8">
+    <section className="card mb-8 overflow-hidden">
+      <div className="grid gap-8 border-b-2 border-[var(--line)] p-5 lg:grid-cols-[16rem_minmax(0,1fr)] lg:p-6">
+        <div className="lg:border-r-2 lg:border-dashed lg:border-[var(--hair)] lg:pr-8">
           {/* The label already names the career, so it captions the number directly
               instead of repeating a generic "Overall career score" above it. */}
-          <h3 className="field-label">{portfolio.label}</h3>
+          <h3 className="label-mono">{portfolio.label}</h3>
           <p className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-5xl font-semibold tracking-tight tabular-nums text-[var(--text)]">
+            <span className="display text-[4.5rem] leading-none tabular-nums text-[var(--ink)]">
               {portfolio.score.toFixed(1)}
             </span>
-            <span className="text-lg text-[var(--muted)]">/ 10</span>
+            <span className="display text-xl text-[var(--muted)]">/ 10</span>
           </p>
           <p className="mt-3 flex flex-wrap items-center gap-2">
             <BandBadge band={portfolio.band} />
-            <span className="field-label">
+            <span className="label-mono">
               {coverage.deeplyAnalyzed} of {coverage.discovered} repositories
               analyzed
             </span>
@@ -41,11 +41,11 @@ export function CareerScoreCard({ portfolio }: CareerScoreCardProps) {
         </div>
 
         <div className="grid gap-5">
-          <p className="max-w-measure text-base text-[var(--text)]">
+          <p className="max-w-measure text-base text-[var(--ink)]">
             {portfolio.summary}
           </p>
 
-          <div className="grid gap-5 border-y border-[var(--border)] py-5 sm:grid-cols-3 sm:divide-x sm:divide-[var(--border)]">
+          <div className="grid gap-5 border-y border-[var(--hair)] py-5 sm:grid-cols-3 sm:divide-x sm:divide-[var(--hair)]">
             <DriverList
               title="Strongest evidence"
               items={portfolio.strongestEvidence}
@@ -67,7 +67,7 @@ export function CareerScoreCard({ portfolio }: CareerScoreCardProps) {
           </div>
 
           <div>
-            <p className="field-label font-medium text-[var(--text)]">
+            <p className="label-mono font-medium text-[var(--ink)]">
               How this is calculated
             </p>
             <p className="mt-1 max-w-measure text-sm text-[var(--muted)]">
@@ -104,7 +104,7 @@ export function CareerScoreCard({ portfolio }: CareerScoreCardProps) {
             </dl>
 
             {coverage.rateLimited ? (
-              <p className="rounded-[var(--radius-sm)] border border-[var(--warning)] bg-[var(--warning-soft)] px-3 py-2 text-sm text-[var(--warning)]">
+              <p className="rounded-[var(--radius)] border border-[var(--warning)] bg-[var(--warning-soft)] px-3 py-2 text-sm text-[var(--warning)]">
                 GitHub rate-limited the run, so this score only covers the
                 repositories that were reached. A GitHub token raises the limit.
               </p>
@@ -112,13 +112,13 @@ export function CareerScoreCard({ portfolio }: CareerScoreCardProps) {
 
             {coverage.skipReasons.length > 0 ? (
               <div>
-                <h4 className="text-sm font-semibold text-[var(--text)]">
+                <h4 className="text-sm font-semibold text-[var(--ink)]">
                   Why repositories were skipped
                 </h4>
                 <ul className="mt-2 grid gap-1.5">
                   {coverage.skipReasons.map((entry) => (
                     <li key={entry.reason} className="flex gap-3 text-sm">
-                      <span className="w-8 shrink-0 text-right font-mono font-semibold tabular-nums text-[var(--text)]">
+                      <span className="w-8 shrink-0 text-right font-mono font-semibold tabular-nums text-[var(--ink)]">
                         {entry.count}
                       </span>
                       <span className="text-[var(--muted)]">
@@ -138,7 +138,7 @@ export function CareerScoreCard({ portfolio }: CareerScoreCardProps) {
       </div>
 
       {portfolio.contributors.length > 0 ? (
-        <div className="border-t border-[var(--border)] px-5 lg:px-6">
+        <div className="border-t border-[var(--hair)] px-5 lg:px-6">
           <Collapsible
             title="How each repository contributed"
             summary={`${portfolio.contributors.length} repositories, by share of the score`}
@@ -149,7 +149,7 @@ export function CareerScoreCard({ portfolio }: CareerScoreCardProps) {
         </div>
       ) : null}
 
-      <p className="border-t border-[var(--border)] px-5 py-3 text-xs text-[var(--muted)] lg:px-6">
+      <p className="border-t border-[var(--hair)] px-5 py-3 text-xs text-[var(--muted)] lg:px-6">
         {portfolio.disclaimer}
       </p>
     </section>
@@ -168,13 +168,13 @@ function ContributorTable({
 
   return (
     <div className="grid gap-3">
-      <ul className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
+      <ul className="divide-y divide-[var(--hair)] border-y border-[var(--hair)]">
         {visible.map((contributor) => (
           <li key={contributor.fullName} className="grid gap-3 px-1 py-4">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <a
-                  className="truncate font-mono text-sm font-medium text-[var(--text)] hover:text-[var(--accent)] hover:underline"
+                  className="truncate font-mono text-sm font-medium text-[var(--ink)] hover:text-[var(--brand)] hover:underline"
                   href={contributor.htmlUrl}
                   target="_blank"
                   rel="noreferrer"
@@ -225,7 +225,7 @@ function ContributorTable({
         <button
           type="button"
           onClick={() => setShowAll((current) => !current)}
-          className="focus-control w-fit rounded-[var(--radius-sm)] border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text)] hover:bg-[var(--surface-raised)]"
+          className="btn focus-control w-fit px-3 py-1.5 text-xs"
         >
           {showAll
             ? 'Show top contributions only'
@@ -252,21 +252,21 @@ function Metric({
   return (
     <div className="grid gap-1">
       <div className="flex items-baseline justify-between gap-3">
-        <dt className="field-label">
+        <dt className="label-mono">
           {label}:
         </dt>
         <dd
-          className={`text-xs tabular-nums ${emphasis ? 'font-semibold text-[var(--text)]' : 'text-[var(--muted)]'}`}
+          className={`text-xs tabular-nums ${emphasis ? 'font-semibold text-[var(--ink)]' : 'text-[var(--muted)]'}`}
         >
           {value.toFixed(1)}/10
         </dd>
       </div>
-      <div className="h-1 overflow-hidden bg-[var(--border)]">
+      <div className="h-1 overflow-hidden bg-[var(--hair)]">
         <div
           className={
             emphasis
-              ? 'h-full bg-[var(--accent)]'
-              : 'h-full bg-[var(--border-strong)]'
+              ? 'h-full bg-[var(--brand)]'
+              : 'h-full bg-[var(--line)]'
           }
           style={{ width: `${Math.max(2, value * 10)}%` }}
         />
@@ -279,12 +279,12 @@ function StatusBadge({ status }: { status: RepositoryAnalysisStatus }) {
   const colors: Record<RepositoryAnalysisStatus, string> = {
     'deeply-analyzed': 'bg-[var(--success-soft)] text-[var(--success)]',
     'metadata-only': 'bg-[var(--warning-soft)] text-[var(--warning)]',
-    skipped: 'bg-[var(--surface-subtle)] text-[var(--muted)]',
+    skipped: 'bg-[var(--surface-2)] text-[var(--muted)]',
   };
 
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-xs font-medium ${colors[status]}`}
+      className={`pill ${colors[status]}`}
     >
       {repositoryAnalysisStatusLabels[status]}
     </span>
@@ -293,9 +293,9 @@ function StatusBadge({ status }: { status: RepositoryAnalysisStatus }) {
 
 function CoverageStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="border-l border-[var(--border)] px-4 py-2 first:border-l-0">
-      <dt className="field-label">{label}</dt>
-      <dd className="mt-1 text-2xl font-semibold tabular-nums text-[var(--text)]">
+    <div className="card-inset px-4 py-2">
+      <dt className="label-mono">{label}</dt>
+      <dd className="display mt-1 text-3xl tabular-nums text-[var(--ink)]">
         {value}
       </dd>
     </div>
@@ -315,14 +315,17 @@ function DriverList({
 }) {
   const dot = {
     positive: 'bg-[var(--success)]',
-    neutral: 'bg-[var(--accent)]',
+    neutral: 'bg-[var(--brand)]',
     negative: 'bg-[var(--warning)]',
   }[tone];
 
   return (
     <div>
-      <h4 className="field-label flex items-center gap-2 sm:px-4">
-        <span className={`size-1.5 rounded-full ${dot}`} aria-hidden="true" />
+      <h4 className="label-mono flex items-center gap-2 text-[var(--ink)] sm:px-4">
+        <span
+          className={`size-2.5 rounded-full border-2 border-[var(--line)] ${dot}`}
+          aria-hidden="true"
+        />
         {title}
       </h4>
       {items.length > 0 ? (
@@ -330,7 +333,7 @@ function DriverList({
           {items.map((item) => (
             <li
               key={item}
-              className="text-sm leading-6 text-[var(--text)] sm:px-4"
+              className="text-sm leading-6 text-[var(--ink)] sm:px-4"
             >
               {item}
             </li>
@@ -349,12 +352,12 @@ function BandBadge({ band }: { band: RelevanceBand }) {
   const colors: Record<RelevanceBand, string> = {
     Strong: 'bg-[var(--success-soft)] text-[var(--success)]',
     Moderate: 'bg-[var(--warning-soft)] text-[var(--warning)]',
-    Limited: 'bg-[var(--surface-subtle)] text-[var(--muted)]',
+    Limited: 'bg-[var(--surface-2)] text-[var(--muted)]',
   };
 
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-xs font-medium ${colors[band]}`}
+      className={`pill ${colors[band]}`}
     >
       {band}
     </span>

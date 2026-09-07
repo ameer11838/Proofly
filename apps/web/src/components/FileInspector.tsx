@@ -22,7 +22,7 @@ export function FileInspector({ report, repository }: FileInspectorProps) {
         repository were read. The score comes from these files only.
       </p>
 
-      <div className="flex w-fit gap-1 border-b border-[var(--border)]">
+      <div className="flex w-fit gap-1 border-b-2 border-[var(--line)]">
         <TabButton
           active={tab === 'analyzed'}
           onClick={() => setTab('analyzed')}
@@ -38,7 +38,7 @@ export function FileInspector({ report, repository }: FileInspectorProps) {
         <ul className="grid gap-1.5">
           {report.ignoredReasons.map((entry) => (
             <li key={entry.reason} className="flex gap-3 text-sm">
-              <span className="w-10 shrink-0 text-right font-mono font-semibold tabular-nums text-[var(--text)]">
+              <span className="w-10 shrink-0 text-right font-mono font-semibold tabular-nums text-[var(--ink)]">
                 {entry.count}
               </span>
               <span className="text-[var(--muted)]">{entry.reason}</span>
@@ -47,15 +47,15 @@ export function FileInspector({ report, repository }: FileInspectorProps) {
         </ul>
       ) : null}
 
-      <ul className="max-h-72 divide-y divide-[var(--border)] overflow-y-auto border-y border-[var(--border)]">
+      <ul className="card-inset max-h-72 divide-y-2 divide-dashed divide-[var(--hair)] overflow-y-auto">
         {files.map((file) => (
           <li
             key={file.path}
-            className="grid gap-0.5 px-2 py-2.5 transition hover:bg-[var(--surface-subtle)]"
+            className="grid gap-0.5 px-3 py-2.5 transition hover:bg-[var(--surface-3)]"
           >
             <div className="flex items-baseline justify-between gap-3">
               <a
-                className="truncate font-mono text-xs text-[var(--text)] hover:text-[var(--accent)]"
+                className="truncate font-mono text-xs text-[var(--ink)] hover:text-[var(--brand)]"
                 href={`${repository.htmlUrl}/blob/${repository.defaultBranch}/${file.path}`}
                 target="_blank"
                 rel="noreferrer"
@@ -97,10 +97,10 @@ function TabButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`focus-control -mb-px border-b-2 px-3 py-2 text-xs font-medium ${
+      className={`label-mono focus-control -mb-0.5 border-b-4 px-3 py-2 ${
         active
-          ? 'border-[var(--accent)] text-[var(--text)]'
-          : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]'
+          ? 'border-[var(--brand)] text-[var(--ink)]'
+          : 'border-transparent hover:text-[var(--ink)]'
       }`}
     >
       {children}

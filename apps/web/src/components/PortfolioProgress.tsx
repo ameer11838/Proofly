@@ -44,12 +44,12 @@ export function PortfolioProgress({
     <section
       aria-live="polite"
       aria-busy={completion === undefined}
-      className="surface mb-6 overflow-hidden"
+      className="card mb-8 overflow-hidden"
     >
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-[var(--line)] bg-[var(--surface-2)] px-4 py-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <StatusDot done={completion !== undefined} />
-          <h3 className="text-sm font-semibold text-[var(--text)]">
+          <h3 className="display text-base text-[var(--ink)]">
             {completion
               ? 'Portfolio scored'
               : queued > 0
@@ -63,19 +63,19 @@ export function PortfolioProgress({
               : ''}
           </span>
         </div>
-        <span className="text-xs tabular-nums text-[var(--muted)]">
+        <span className="pill bg-[var(--accent)] text-[var(--accent-ink)] tabular-nums">
           {percent}%
         </span>
       </header>
 
-      <div className="h-0.5 bg-[var(--surface-raised)]">
+      <div className="h-2 border-b-2 border-[var(--line)] bg-[var(--surface-3)]">
         <div
           role="progressbar"
           aria-valuenow={percent}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-label="Portfolio analysis progress"
-          className="h-full bg-[var(--accent)] transition-[width] duration-500 ease-out motion-reduce:transition-none"
+          className="h-full bg-[var(--brand)] transition-[width] duration-500 ease-out motion-reduce:transition-none"
           style={{ width: `${Math.max(percent, 1)}%` }}
         />
       </div>
@@ -95,7 +95,7 @@ export function PortfolioProgress({
         )}
       </div>
 
-      <footer className="flex flex-wrap gap-x-5 gap-y-1 border-t border-[var(--border)] px-4 py-2.5 text-xs text-[var(--muted)]">
+      <footer className="flex flex-wrap gap-x-5 gap-y-1 border-t-2 border-[var(--line)] bg-[var(--surface-2)] px-4 py-2.5 text-xs text-[var(--muted)]">
         {completion ? (
           <>
             <Counter value={completion.discovered} label="discovered" />
@@ -135,13 +135,13 @@ function RepositoryRow({ row }: { row: PortfolioRepositoryRow }) {
           row.state === 'analyzed'
             ? 'bg-[var(--success)]'
             : skipped
-              ? 'bg-[var(--border)]'
-              : 'bg-[var(--accent)] motion-safe:animate-pulseDot'
+              ? 'bg-[var(--hair)]'
+              : 'bg-[var(--brand)] motion-safe:animate-pulseDot'
         }`}
       />
       <span
         className={`min-w-0 truncate font-mono ${
-          skipped ? 'text-[var(--muted)]' : 'text-[var(--text)]'
+          skipped ? 'text-[var(--muted)]' : 'text-[var(--ink)]'
         }`}
       >
         {row.name}
@@ -163,7 +163,7 @@ function RepositoryRow({ row }: { row: PortfolioRepositoryRow }) {
 function Counter({ value, label }: { value: number | string; label: string }) {
   return (
     <span>
-      <span className="font-medium tabular-nums text-[var(--text)]">
+      <span className="font-medium tabular-nums text-[var(--ink)]">
         {value}
       </span>{' '}
       {label}

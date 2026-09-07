@@ -134,13 +134,15 @@ export function RepositoryCard({
   const isRunning = phase === 'running' || phase === 'completing';
 
   return (
-    <article className="surface p-5">
+    <article className="card p-5 sm:p-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="field-label tabular-nums">{rank}.</span>
+            <span className="pill bg-[var(--surface-3)] tabular-nums">
+              {String(rank).padStart(2, '0')}
+            </span>
             <a
-              className="truncate font-mono text-base font-medium text-[var(--text)] hover:text-[var(--accent)] hover:underline"
+              className="display truncate text-xl text-[var(--ink)] underline-offset-4 hover:text-[var(--brand)] hover:underline"
               href={repository.htmlUrl}
               target="_blank"
               rel="noreferrer"
@@ -156,10 +158,10 @@ export function RepositoryCard({
           </p>
           {repository.fork && repository.userContribution ? (
             <p
-              className={`mt-3 border-l-2 px-3 py-2 font-mono text-xs font-semibold ${
+              className={`mt-3 rounded-[var(--radius)] border-2 border-l-[6px] px-3 py-2 font-mono text-xs font-semibold ${
                 repository.userContribution.verified
                   ? 'border-[var(--success)] bg-[var(--success-soft)] text-[var(--success)]'
-                  : 'border-[var(--border-strong)] bg-[var(--surface-subtle)] text-[var(--muted)]'
+                  : 'border-[var(--line)] bg-[var(--surface-2)] text-[var(--muted)]'
               }`}
             >
               {repository.userContribution.status}
@@ -180,19 +182,19 @@ export function RepositoryCard({
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-[var(--border)] py-2.5 text-xs">
-        <span className="font-medium text-[var(--text)]">
+      <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-2 border-y-2 border-dashed border-[var(--hair)] py-2.5 text-xs">
+        <span className="pill bg-[var(--brand-soft)] text-[var(--brand)]">
           {repository.language ?? 'Language unknown'}
         </span>
         {topSkills.map((skill) => (
           <span
             key={skill.id}
             title={skill.matchedSignals.join(', ')}
-            className={
+            className={`pill ${
               skill.strength === 'strong'
-                ? 'text-[var(--success)]'
-                : 'text-[var(--warning)]'
-            }
+                ? 'bg-[var(--success-soft)] text-[var(--success)]'
+                : 'bg-[var(--warning-soft)] text-[var(--warning)]'
+            }`}
           >
             {skill.label}
           </span>
@@ -203,7 +205,7 @@ export function RepositoryCard({
       </div>
 
       <p className="mt-3 max-w-measure text-sm text-[var(--muted)]">
-        <span className="font-medium text-[var(--text)]">
+        <span className="font-medium text-[var(--ink)]">
           Why this ranks here:{' '}
         </span>
         {whyThisRanks}
@@ -211,7 +213,7 @@ export function RepositoryCard({
 
       {strongestEvidence ? (
         <p className="mt-1.5 max-w-measure text-sm text-[var(--muted)]">
-          <span className="font-medium text-[var(--text)]">
+          <span className="font-medium text-[var(--ink)]">
             Strongest evidence:
           </span>{' '}
           {strongestEvidence.label} — {strongestEvidence.value}
@@ -227,13 +229,13 @@ export function RepositoryCard({
             {components.map((component) => (
               <li
                 key={component.label}
-                className="grid gap-0.5 border-b border-[var(--border)] px-1 py-2 last:border-b-0"
+                className="grid gap-0.5 border-b border-[var(--hair)] px-1 py-2 last:border-b-0"
               >
                 <div className="flex items-baseline justify-between gap-3">
-                  <span className="text-sm font-medium text-[var(--text)]">
+                  <span className="text-sm font-medium text-[var(--ink)]">
                     {component.label}
                   </span>
-                  <span className="font-mono text-xs font-semibold tabular-nums text-[var(--text)]">
+                  <span className="font-mono text-xs font-semibold tabular-nums text-[var(--ink)]">
                     {component.earned}/{component.max}
                   </span>
                 </div>
@@ -246,9 +248,9 @@ export function RepositoryCard({
         </Collapsible>
       </div>
 
-      <div className="mt-4 border-t border-[var(--border)] pt-4">
+      <div className="mt-4 border-t border-[var(--hair)] pt-4">
         <button
-          className="primary-action focus-control h-9 px-4 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
+          className="btn btn-primary focus-control h-11 px-5 text-sm uppercase tracking-wide"
           type="button"
           disabled={
             isRunning ||
@@ -266,7 +268,7 @@ export function RepositoryCard({
         </button>
 
         {error ? (
-          <p role="alert" className="mt-3 text-sm text-[var(--error)]">
+          <p role="alert" className="mt-3 text-sm text-[var(--danger)]">
             {error}
           </p>
         ) : null}
@@ -317,14 +319,16 @@ function ScoreTile({
   return (
     <div
       title={title}
-      className="w-24 border-l border-[var(--border)] px-3 py-1 text-right"
+      className={`min-w-24 rounded-[var(--radius)] border-2 border-[var(--line)] px-3 py-1.5 text-right ${
+        emphasis
+          ? 'bg-[var(--accent)] text-[var(--accent-ink)]'
+          : 'bg-[var(--surface-2)] text-[var(--ink)]'
+      }`}
     >
-      <div
-        className={`text-lg tabular-nums ${emphasis ? 'font-semibold text-[var(--text)]' : 'text-[var(--muted)]'}`}
-      >
+      <div className="display text-xl tabular-nums">
         {value}
       </div>
-      <div className="field-label mt-0.5">{label}</div>
+      <div className="label-mono mt-0.5 text-current opacity-70">{label}</div>
     </div>
   );
 }
@@ -334,7 +338,7 @@ function plural(count: number, one: string, many: string): string {
 }
 
 function labelClassName(label: RankedRepository['relevanceLabel']): string {
-  const base = 'rounded-full px-2 py-0.5 text-xs font-medium';
+  const base = 'pill';
 
   if (label === 'High') {
     return `${base} bg-[var(--success-soft)] text-[var(--success)]`;
@@ -344,5 +348,5 @@ function labelClassName(label: RankedRepository['relevanceLabel']): string {
     return `${base} bg-[var(--warning-soft)] text-[var(--warning)]`;
   }
 
-  return `${base} bg-[var(--surface-subtle)] text-[var(--muted)]`;
+  return `${base} bg-[var(--surface-2)] text-[var(--muted)]`;
 }

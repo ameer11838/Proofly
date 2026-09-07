@@ -36,7 +36,7 @@ export function AnalysisNavigation({ prefix }: { prefix: string }) {
   return (
     <nav
       aria-label="Analysis sections"
-      className="sticky top-0 z-20 overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)] px-4"
+      className="sticky top-0 z-20 overflow-x-auto border-b-2 border-[var(--line)] bg-[var(--surface)] px-3"
     >
       <ul className="flex min-w-max">
         {sections.map(([key, label]) => {
@@ -46,10 +46,10 @@ export function AnalysisNavigation({ prefix }: { prefix: string }) {
             <a
               href={`#${id}`}
               aria-current={active === id ? 'location' : undefined}
-              className={`focus-control -mb-px block border-b-2 px-3 py-2 text-xs font-medium ${
+              className={`label-mono focus-control -mb-0.5 block border-b-4 px-3 py-2.5 ${
                 active === id
-                  ? 'border-[var(--accent)] text-[var(--text)]'
-                  : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]'
+                  ? 'border-[var(--brand)] text-[var(--ink)]'
+                  : 'border-transparent hover:text-[var(--ink)]'
               }`}
             >
               {label}

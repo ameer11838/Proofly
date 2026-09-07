@@ -10,7 +10,7 @@ interface ImprovementSectionProps {
 export function ImprovementSection({ plan }: ImprovementSectionProps) {
   if (plan.actions.length === 0) {
     return (
-      <p className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--success-soft)] px-3 py-2 text-sm text-[var(--success)]">
+      <p className="card-flat bg-[var(--success-soft)] px-3 py-2 text-sm font-semibold text-[var(--success)]">
         Every scored check already passes.
       </p>
     );
@@ -22,10 +22,10 @@ export function ImprovementSection({ plan }: ImprovementSectionProps) {
   return (
     <div className="grid gap-4">
       <div className="flex flex-wrap items-center gap-3">
-        <p className="text-xl font-semibold tabular-nums text-[var(--text)]">
+        <p className="display text-3xl tabular-nums text-[var(--ink)]">
           {plan.currentScore.toFixed(1)}
           <span
-            className="mx-2 text-[var(--border-strong)]"
+            className="mx-2 text-[var(--line)]"
             aria-label="improves to"
           >
             →
@@ -61,20 +61,18 @@ function ActionGroup({
   if (actions.length === 0) return null;
   return (
     <section>
-      <h4 className="field-label mb-2 font-medium text-[var(--text)]">
-        {title}
-      </h4>
+      <h4 className="label-mono mb-2 text-[var(--ink)]">{title}</h4>
       <ol className="grid gap-3">
         {actions.map((action, index) => (
           <li
             key={action.id}
-            className={`grid gap-2 rounded-[var(--radius-sm)] border border-l-2 border-[var(--border)] px-3 py-3 sm:grid-cols-[1.5rem_minmax(0,1fr)_auto] sm:items-start sm:gap-3 ${impactSurface(action.impact)}`}
+            className={`grid gap-2 rounded-[var(--radius)] border-2 border-l-[6px] border-[var(--line)] px-3.5 py-3 sm:grid-cols-[1.75rem_minmax(0,1fr)_auto] sm:items-start sm:gap-3 ${impactSurface(action.impact)}`}
           >
-            <span className="text-xs tabular-nums text-[var(--muted)]">
-              {index + 1}.
+            <span className="display text-lg tabular-nums text-[var(--muted)]">
+              {index + 1}
             </span>
             <div>
-              <p className="text-sm font-semibold text-[var(--text)]">
+              <p className="display text-base text-[var(--ink)]">
                 {action.title}
               </p>
               <p className="text-sm leading-6 text-[var(--muted)]">
@@ -85,18 +83,18 @@ function ActionGroup({
                   {action.paths.join(' · ')}
                 </p>
               ) : null}
-              <p className="field-label mt-1">
+              <p className="label-mono mt-1">
                 {scoreCategoryLabels[action.category]}
               </p>
               {action.suggestedApproach ? (
-                <details className="mt-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5">
-                  <summary className="focus-control cursor-pointer text-sm font-medium text-[var(--accent)]">
+                <details className="card-flat mt-3 bg-[var(--surface)] px-3 py-2.5">
+                  <summary className="focus-control cursor-pointer text-sm font-medium text-[var(--brand)]">
                     How to fix it
                   </summary>
                   <div className="mt-2 grid gap-2 text-sm leading-6 text-[var(--muted)]">
                     <p>{action.suggestedApproach}</p>
                     {action.example ? (
-                      <pre className="overflow-x-auto rounded-[var(--radius-sm)] border border-[#30363d] bg-[#0d1117] p-3 font-mono text-xs leading-5 text-[#e6edf3]">
+                      <pre className="overflow-x-auto rounded-[var(--radius)] border-2 border-[var(--line)] bg-[#12101a] p-3 font-mono text-xs leading-5 text-[#e9e3f5]">
                         <code>{action.example}</code>
                       </pre>
                     ) : null}
@@ -105,7 +103,7 @@ function ActionGroup({
               ) : null}
             </div>
             <span
-              className={`w-fit rounded-full px-2 py-0.5 text-xs font-medium ${impactClass(action.impact)}`}
+              className={`pill ${impactClass(action.impact)}`}
             >
               {action.impact ?? 'Medium'}
               {action.points > 0 ? ` · +${action.points.toFixed(1)}` : ''}
@@ -119,10 +117,10 @@ function ActionGroup({
 
 function impactClass(impact: ImprovementPlan['actions'][number]['impact']) {
   if (impact === 'High') {
-    return 'bg-[var(--error-soft)] text-[var(--error)]';
+    return 'bg-[var(--danger-soft)] text-[var(--danger)]';
   }
   if (impact === 'Low') {
-    return 'bg-[var(--surface-subtle)] text-[var(--muted)]';
+    return 'bg-[var(--surface-2)] text-[var(--muted)]';
   }
   return 'bg-[var(--warning-soft)] text-[var(--warning)]';
 }
@@ -132,7 +130,7 @@ function impactSurface(impact: ImprovementPlan['actions'][number]['impact']) {
     return 'border-[var(--warning)] bg-[var(--surface)]';
   }
   if (impact === 'Low') {
-    return 'border-[var(--border)] bg-[var(--surface)]';
+    return 'border-[var(--hair)] bg-[var(--surface)]';
   }
-  return 'border-[var(--border-strong)] bg-[var(--surface)]';
+  return 'border-[var(--line)] bg-[var(--surface)]';
 }

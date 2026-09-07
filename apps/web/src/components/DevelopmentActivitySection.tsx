@@ -8,10 +8,10 @@ export function DevelopmentActivitySection({
   return (
     <div className="grid gap-4">
       <div className="flex flex-wrap items-baseline gap-2">
-        <strong className="text-xl font-semibold tabular-nums text-[var(--text)]">
+        <strong className="display text-3xl tabular-nums text-[var(--ink)]">
           {activity.commitCount} commits
         </strong>
-        <span aria-hidden="true" className="text-[var(--border-strong)]">
+        <span aria-hidden="true" className="text-[var(--line)]">
           ·
         </span>
         <span className="text-sm text-[var(--muted)]">{activity.label}</span>
@@ -21,7 +21,7 @@ export function DevelopmentActivitySection({
       </p>
 
       {activity.commits.length > 0 ? (
-        <ul className="divide-y divide-[var(--border)] border-y border-[var(--border)]">
+        <ul className="divide-y-2 divide-dashed divide-[var(--hair)] border-y-2 border-[var(--hair)]">
           {activity.commits.slice(0, 10).map((commit) => (
             <li
               key={commit.sha}
@@ -31,12 +31,12 @@ export function DevelopmentActivitySection({
                 href={commit.htmlUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="font-mono text-xs font-semibold text-[var(--accent)] hover:underline"
+                className="font-mono text-xs font-semibold text-[var(--brand)] hover:underline"
               >
                 {commit.sha.slice(0, 7)}
               </a>
               <div>
-                <p className="font-mono text-xs text-[var(--text)]">
+                <p className="font-mono text-xs text-[var(--ink)]">
                   {commit.message}
                 </p>
                 <p className="mt-1 text-xs text-[var(--muted)]">
@@ -50,7 +50,7 @@ export function DevelopmentActivitySection({
                 ) : null}
               </div>
               <span
-                className={`w-fit rounded-full px-2 py-0.5 text-xs font-medium ${
+                className={`pill ${
                   commit.quality === 'clear'
                     ? 'bg-[var(--success-soft)] text-[var(--success)]'
                     : 'bg-[var(--warning-soft)] text-[var(--warning)]'

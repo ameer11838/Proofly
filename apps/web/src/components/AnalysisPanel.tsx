@@ -36,9 +36,9 @@ export function AnalysisPanel({ analysis }: AnalysisPanelProps) {
   const sectionId = (key: string) => `${navigationPrefix}-${key}`;
 
   return (
-    <div className="mt-5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)]">
+    <div className="card-flat mt-5 overflow-hidden">
       {analysis.userContribution ? (
-        <div className="border-b border-[var(--border)] bg-[var(--success-soft)] px-5 py-2.5 text-xs text-[var(--success)]">
+        <div className="border-b-2 border-[var(--line)] bg-[var(--success-soft)] px-5 py-2.5 text-xs text-[var(--success)]">
           <span className="font-medium">
             {analysis.userContribution.status}.
           </span>{' '}
@@ -51,19 +51,19 @@ export function AnalysisPanel({ analysis }: AnalysisPanelProps) {
       {/* 1. The score itself, and what it is made of. */}
       <div
         id={sectionId('overview')}
-        className="scroll-mt-14 border-b border-[var(--border)] bg-[var(--surface-strong)] px-5 py-6 text-[var(--text)]"
+        className="scroll-mt-14 border-b-2 border-[var(--line)] bg-[var(--surface-2)] px-5 py-6 text-[var(--ink)]"
       >
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div>
-            <p className="field-label">Repository score</p>
+            <p className="label-mono">Repository score</p>
             <p className="mt-1 flex items-baseline gap-2">
-              <span className="text-4xl font-semibold tracking-tight tabular-nums">
+              <span className="display text-6xl tabular-nums">
                 {rating.score.toFixed(1)}
               </span>
               <span className="text-lg text-[var(--muted)]">
                 / {breakdown.maxScore.toFixed(0)}
               </span>
-              <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 text-xs font-medium">
+              <span className="pill bg-[var(--accent)] text-[var(--accent-ink)]">
                 {rating.label}
               </span>
             </p>
@@ -86,7 +86,7 @@ export function AnalysisPanel({ analysis }: AnalysisPanelProps) {
           </div>
         </div>
 
-        <p className="mt-5 max-w-measure text-base text-[var(--text)]">
+        <p className="mt-5 max-w-measure text-base text-[var(--ink)]">
           {rating.summary}
         </p>
       </div>
@@ -155,10 +155,10 @@ export function AnalysisPanel({ analysis }: AnalysisPanelProps) {
             {analysis.findings.map((finding) => (
               <li
                 key={`${finding.category}-${finding.explanation}`}
-                className={`rounded-[var(--radius-sm)] border-l-4 px-4 py-4 ${findingBackground(finding.category, finding.importance)}`}
+                className={`rounded-[var(--radius)] border-2 border-l-[6px] border-[var(--line)] px-4 py-3.5 ${findingBackground(finding.category, finding.importance)}`}
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-semibold text-[var(--text)]">
+                  <p className="display text-base text-[var(--ink)]">
                     {finding.category}
                   </p>
                   <span className={importanceClassName(finding.importance)}>
@@ -168,7 +168,7 @@ export function AnalysisPanel({ analysis }: AnalysisPanelProps) {
                 <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
                   {finding.explanation}
                 </p>
-                <p className="mt-2 text-sm leading-6 text-[var(--text)]">
+                <p className="mt-2 text-sm leading-6 text-[var(--ink)]">
                   <span className="font-medium">Recommendation:</span>{' '}
                   {finding.recommendation}
                 </p>
@@ -250,10 +250,10 @@ function StatTile({
   caption: string;
 }) {
   return (
-    <div className="min-w-48 border-l border-[var(--border)] px-4 py-1 first:border-l-0">
-      <p className="field-label">{label}</p>
+    <div className="min-w-48 border-l-2 border-[var(--hair)] px-4 py-1 first:border-l-0 first:pl-0">
+      <p className="label-mono">{label}</p>
       <p className="mt-1 flex items-baseline gap-2">
-        <span className="text-2xl font-semibold tabular-nums">{value}</span>
+        <span className="display text-3xl tabular-nums">{value}</span>
         <Badge band={band}>{band}</Badge>
       </p>
       <p className="mt-1 text-xs leading-5 text-[var(--muted)]">{caption}</p>
@@ -271,12 +271,12 @@ function Badge({
   const colors: Record<RelevanceBand, string> = {
     Strong: 'bg-[var(--success-soft)] text-[var(--success)]',
     Moderate: 'bg-[var(--warning-soft)] text-[var(--warning)]',
-    Limited: 'bg-[var(--surface-raised)] text-[var(--muted)]',
+    Limited: 'bg-[var(--surface-3)] text-[var(--muted)]',
   };
 
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-xs font-medium ${colors[band]}`}
+      className={`pill ${colors[band]}`}
     >
       {children}
     </span>
@@ -284,7 +284,7 @@ function Badge({
 }
 
 function importanceClassName(importance: 'High' | 'Medium' | 'Low'): string {
-  const base = 'rounded-full px-2 py-0.5 text-xs font-medium';
+  const base = 'pill';
 
   if (importance === 'High') {
     return `${base} bg-[var(--warning-soft)] text-[var(--warning)]`;
@@ -294,7 +294,7 @@ function importanceClassName(importance: 'High' | 'Medium' | 'Low'): string {
     return `${base} bg-[var(--warning-soft)] text-[var(--warning)]`;
   }
 
-  return `${base} bg-[var(--surface-subtle)] text-[var(--muted)]`;
+  return `${base} bg-[var(--surface-2)] text-[var(--muted)]`;
 }
 
 function findingBackground(
@@ -302,7 +302,7 @@ function findingBackground(
   importance: 'High' | 'Medium' | 'Low',
 ): string {
   if (/security/i.test(category) && importance === 'High') {
-    return 'border-[var(--error)] bg-[var(--error-soft)]';
+    return 'border-[var(--danger)] bg-[var(--danger-soft)]';
   }
   if (importance === 'High' || importance === 'Medium') {
     return 'border-[var(--warning)] bg-[var(--warning-soft)]';

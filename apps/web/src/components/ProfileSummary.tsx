@@ -6,17 +6,17 @@ interface ProfileSummaryProps {
 
 export function ProfileSummary({ profile }: ProfileSummaryProps) {
   return (
-    <section className="mb-6 border-b border-[var(--border)] pb-5">
+    <section className="card mb-8 p-5">
       <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
           <img
-            className="size-12 rounded-full border border-[var(--border)]"
+            className="size-14 rounded-full border-2 border-[var(--line)]"
             src={profile.avatarUrl}
             alt={`${profile.login} avatar`}
           />
           <div>
             <a
-              className="text-lg font-semibold text-[var(--text)] hover:text-[var(--accent)] hover:underline"
+              className="display text-2xl text-[var(--ink)] underline-offset-4 hover:text-[var(--brand)] hover:underline"
               href={profile.profileUrl}
               target="_blank"
               rel="noreferrer"
@@ -37,7 +37,7 @@ export function ProfileSummary({ profile }: ProfileSummaryProps) {
           <Stat label="Following" value={profile.following} />
         </div>
       </div>
-      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--muted)]">
+      <div className="mt-4 flex flex-wrap gap-2 border-t-2 border-dashed border-[var(--hair)] pt-4">
         {profile.location ? <Chip>{profile.location}</Chip> : null}
         {profile.company ? <Chip>{profile.company}</Chip> : null}
         {profile.blog ? <Chip>{profile.blog}</Chip> : null}
@@ -48,16 +48,16 @@ export function ProfileSummary({ profile }: ProfileSummaryProps) {
 }
 
 function Chip({ children }: { children: React.ReactNode }) {
-  return <span>{children}</span>;
+  return <span className="pill bg-[var(--surface-2)]">{children}</span>;
 }
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="min-w-20 border-l border-[var(--border)] px-4 py-1 text-left first:border-l-0">
-      <div className="text-lg font-semibold tabular-nums text-[var(--text)]">
+    <div className="card-inset min-w-20 px-3 py-1.5 text-left">
+      <div className="display text-xl tabular-nums text-[var(--ink)]">
         {value}
       </div>
-      <div className="field-label mt-0.5">{label}</div>
+      <div className="label-mono mt-0.5">{label}</div>
     </div>
   );
 }
