@@ -15,12 +15,12 @@ const midAnalysis = stateFrom([
   {
     stage: 'fetching-repository',
     status: 'complete',
-    message: 'TREE OK · 240 FILE(S)',
+    message: '240 files in the repository',
   },
   {
     stage: 'inspecting-code',
     status: 'active',
-    message: 'READ src/services/github.ts',
+    message: 'Read src/services/github.ts',
     file: 'src/services/github.ts',
     stageProgress: 0.5,
     counters: { filesInspected: 12, filesSelected: 24, dependencies: 9 },
@@ -28,7 +28,7 @@ const midAnalysis = stateFrom([
   {
     stage: 'extracting-evidence',
     status: 'active',
-    message: 'CODE EVIDENCE FOUND: HTTP CLIENT CALL',
+    message: 'Evidence: HTTP client call',
     evidence: {
       label: 'API and service design',
       detected: 'HTTP client call',
@@ -40,7 +40,7 @@ const midAnalysis = stateFrom([
 ]);
 
 describe('AnalysisProgress', () => {
-  it('shows the numbered stages with the current one described', () => {
+  it('shows the stages with the current one described', () => {
     render(
       <AnalysisProgress
         state={midAnalysis}
@@ -50,13 +50,11 @@ describe('AnalysisProgress', () => {
     );
 
     expect(screen.getByText('Analyzing repository')).toBeInTheDocument();
-    expect(screen.getByText('FETCHING REPOSITORY')).toBeInTheDocument();
-    expect(screen.getByText('EXTRACTING EVIDENCE')).toBeInTheDocument();
-    expect(screen.getByText('BUILDING REPORT')).toBeInTheDocument();
+    expect(screen.getByText('Fetching repository')).toBeInTheDocument();
+    expect(screen.getByText('Extracting evidence')).toBeInTheDocument();
+    expect(screen.getByText('Building report')).toBeInTheDocument();
     expect(
-      screen.getByText(
-        /finding code fragments that demonstrate technical skills/i,
-      ),
+      screen.getByText(/pulling code that shows technical skills/i),
     ).toBeInTheDocument();
   });
 
@@ -83,11 +81,11 @@ describe('AnalysisProgress', () => {
       />,
     );
 
-    expect(screen.getByText('READ src/services/github.ts')).toBeInTheDocument();
+    expect(screen.getByText('Read src/services/github.ts')).toBeInTheDocument();
     expect(screen.getByText('Evidence found')).toBeInTheDocument();
     expect(screen.getByText('HTTP client call')).toBeInTheDocument();
     expect(
-      screen.getByText('src/services/github.ts : 42–49'),
+      screen.getByText('src/services/github.ts:42–49'),
     ).toBeInTheDocument();
     expect(screen.getByText('12')).toBeInTheDocument();
     expect(screen.getByText('files inspected')).toBeInTheDocument();
@@ -133,6 +131,6 @@ describe('AnalysisProgress', () => {
       'aria-valuenow',
       '0',
     );
-    expect(screen.getByText(/awaiting first response/i)).toBeInTheDocument();
+    expect(screen.getByText(/waiting for the first result/i)).toBeInTheDocument();
   });
 });

@@ -354,7 +354,7 @@ function collectGaps(analyses: RepositoryAnalysisResponse[]): string[] {
     // Naming "career relevance" as a gap inside a career score is circular; the missing
     // skills listed below say the same thing in a way the user can act on.
     if (key !== 'career-relevance' && ratio < 0.6 && gaps.length < 3) {
-      gaps.push(scoreCategoryLabels[key].toLowerCase());
+      gaps.push(scoreCategoryLabels[key]);
     }
   }
 
@@ -384,7 +384,7 @@ function collectGaps(analyses: RepositoryAnalysisResponse[]): string[] {
   const universallyMissing = [...missingEverywhere.entries()]
     .sort((a, b) => b[1] - a[1])
     .slice(0, 2)
-    .map(([label]) => label.toLowerCase());
+    .map(([label]) => label);
 
   return [...new Set([...gaps, ...universallyMissing])].slice(0, 4);
 }

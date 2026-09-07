@@ -50,7 +50,7 @@ const engineeringSignalGroups: { owner: SignalOwner; signals: CodeSignal[] }[] =
         skillId: 'testing',
         skillLabel: 'Automated testing',
         category: 'project-quality',
-        scoreImpact: 'Supports testing within the Project Quality category.',
+        scoreImpact: 'Supports testing within the Project quality category.',
       },
       signals: [
         {
@@ -74,7 +74,7 @@ const engineeringSignalGroups: { owner: SignalOwner; signals: CodeSignal[] }[] =
         skillId: 'ci-pipeline',
         skillLabel: 'CI/CD automation',
         category: 'project-quality',
-        scoreImpact: 'Supports automation within the Project Quality category.',
+        scoreImpact: 'Supports automation within the Project quality category.',
       },
       signals: [
         {
@@ -91,7 +91,7 @@ const engineeringSignalGroups: { owner: SignalOwner; signals: CodeSignal[] }[] =
         skillLabel: 'Error handling',
         category: 'project-quality',
         scoreImpact:
-          'Supports reliability within the Project Quality category.',
+          'Supports reliability within the Project quality category.',
       },
       signals: [
         {
@@ -114,7 +114,7 @@ const engineeringSignalGroups: { owner: SignalOwner; signals: CodeSignal[] }[] =
         skillLabel: 'Input validation',
         category: 'project-quality',
         scoreImpact:
-          'Supports maintainability within the Project Quality category.',
+          'Supports maintainability within the Project quality category.',
       },
       signals: [
         {
@@ -131,7 +131,7 @@ const engineeringSignalGroups: { owner: SignalOwner; signals: CodeSignal[] }[] =
         skillLabel: 'Configuration management',
         category: 'project-quality',
         scoreImpact:
-          'Supports completeness within the Project Quality category.',
+          'Supports completeness within the Project quality category.',
       },
       signals: [
         {

@@ -4,6 +4,7 @@ import type {
   PortfolioProgressState,
   PortfolioRepositoryRow,
 } from '../lib/portfolioProgress.js';
+import { StatusDot } from './AnalysisProgress.js';
 
 interface PortfolioProgressProps {
   state: PortfolioProgressState;
@@ -43,52 +44,31 @@ export function PortfolioProgress({
     <section
       aria-live="polite"
       aria-busy={completion === undefined}
-      className="surface mb-6 overflow-hidden font-mono"
+      className="surface mb-6 overflow-hidden"
     >
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-3.5">
-        <div className="flex items-center gap-2.5">
-          {completion ? (
-            <span
-              className="text-sm font-bold text-[var(--success)]"
-              aria-hidden="true"
-            >
-              ✓
-            </span>
-          ) : (
-            <span
-              className="size-2 rounded-full bg-[var(--accent)] motion-safe:animate-pulseDot"
-              aria-hidden="true"
-            />
-          )}
-          <h3 className="text-sm font-bold uppercase tracking-[0.14em] text-[var(--text)]">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <StatusDot done={completion !== undefined} />
+          <h3 className="text-sm font-semibold text-[var(--text)]">
             {completion
-              ? 'Portfolio assessment complete'
+              ? 'Portfolio scored'
               : queued > 0
-                ? `Analyzing portfolio — ${resolved.length} / ${queued} repositories`
+                ? `Analyzing ${resolved.length} of ${queued} repositories`
                 : 'Analyzing portfolio'}
           </h3>
+          <span className="truncate text-xs text-[var(--muted)]">
+            @{username} · {careerLabel}
+            {activeStage && !completion
+              ? ` · ${portfolioStageLabels[activeStage.stage]}`
+              : ''}
+          </span>
         </div>
-        <p className="text-xs tabular-nums text-[var(--muted)]">
-          PORTFOLIO /{' '}
-          <span className="font-bold text-[var(--accent)]">{percent}%</span>
-        </p>
+        <span className="text-xs tabular-nums text-[var(--muted)]">
+          {percent}%
+        </span>
       </header>
 
-      <div className="border-b border-[var(--border)] px-5 py-2.5">
-        <p className="truncate text-xs uppercase tracking-wider text-[var(--muted)]">
-          @{username} <span className="text-[var(--border-strong)]">·</span>{' '}
-          {careerLabel}
-          {activeStage && !completion ? (
-            <>
-              {' '}
-              <span className="text-[var(--border-strong)]">·</span>{' '}
-              {portfolioStageLabels[activeStage.stage]}
-            </>
-          ) : null}
-        </p>
-      </div>
-
-      <div className="h-1.5 overflow-hidden bg-[var(--surface-subtle)]">
+      <div className="h-0.5 bg-[var(--surface-raised)]">
         <div
           role="progressbar"
           aria-valuenow={percent}
@@ -100,54 +80,31 @@ export function PortfolioProgress({
         />
       </div>
 
-      <div className="p-5">
-        <div
-          ref={listRef}
-          className="max-h-56 overflow-y-auto rounded-[7px] border border-[var(--border)] bg-[var(--surface-subtle)] p-3"
-        >
-          {state.repositories.length === 0 ? (
-            <p className="text-xs text-[var(--muted)]">
-              $ discovering repositories…
-            </p>
-          ) : (
-            <ul className="grid gap-1">
-              {state.repositories.map((row) => (
-                <RepositoryRow key={row.name} row={row} />
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {state.currentRepository && !completion ? (
-          <p className="mt-3 text-xs uppercase tracking-wider text-[var(--muted)]">
-            Current repository:{' '}
-            <span className="font-bold text-[var(--text)]">
-              {state.currentRepository}
-            </span>
-            <span
-              className="motion-safe:animate-caret text-[var(--accent)]"
-              aria-hidden="true"
-            >
-              {' '}
-              ▍
-            </span>
-          </p>
-        ) : null}
+      <div
+        ref={listRef}
+        className="max-h-52 overflow-y-auto px-4 py-3 text-xs"
+      >
+        {state.repositories.length === 0 ? (
+          <p className="text-[var(--muted)]">Finding repositories…</p>
+        ) : (
+          <ul className="grid gap-1.5">
+            {state.repositories.map((row) => (
+              <RepositoryRow key={row.name} row={row} />
+            ))}
+          </ul>
+        )}
       </div>
 
-      <footer className="flex flex-wrap gap-x-5 gap-y-1 border-t border-[var(--border)] px-5 py-3 text-xs uppercase tracking-wider text-[var(--muted)]">
+      <footer className="flex flex-wrap gap-x-5 gap-y-1 border-t border-[var(--border)] px-4 py-2.5 text-xs text-[var(--muted)]">
         {completion ? (
           <>
-            <Counter
-              value={completion.discovered}
-              label="repositories discovered"
-            />
-            <Counter
-              value={completion.deeplyAnalyzed}
-              label="deeply analyzed"
-            />
+            <Counter value={completion.discovered} label="discovered" />
+            <Counter value={completion.deeplyAnalyzed} label="analyzed" />
             <Counter value={completion.skipped} label="skipped" />
-            <Counter value={completion.score.toFixed(1)} label="career score" />
+            <Counter
+              value={completion.score.toFixed(1)}
+              label="career score"
+            />
           </>
         ) : (
           <>
@@ -168,25 +125,23 @@ export function PortfolioProgress({
 }
 
 function RepositoryRow({ row }: { row: PortfolioRepositoryRow }) {
-  const marker =
-    row.state === 'analyzed' ? '✓' : row.state === 'skipped' ? '–' : '›';
-  const markerClass =
-    row.state === 'analyzed'
-      ? 'text-[var(--success)]'
-      : row.state === 'skipped'
-        ? 'text-[var(--border-strong)]'
-        : 'text-[var(--accent)]';
+  const skipped = row.state === 'skipped';
 
   return (
-    <li className="flex items-baseline gap-2 text-xs motion-safe:animate-riseIn">
-      <span className={`shrink-0 ${markerClass}`} aria-hidden="true">
-        {marker}
-      </span>
+    <li className="flex items-baseline gap-2 motion-safe:animate-riseIn">
       <span
-        className={`min-w-0 truncate ${
-          row.state === 'skipped'
-            ? 'text-[var(--border-strong)] line-through'
-            : 'text-[var(--text)]'
+        aria-hidden="true"
+        className={`mt-1 size-1.5 shrink-0 self-start rounded-full ${
+          row.state === 'analyzed'
+            ? 'bg-[var(--success)]'
+            : skipped
+              ? 'bg-[var(--border)]'
+              : 'bg-[var(--accent)] motion-safe:animate-pulseDot'
+        }`}
+      />
+      <span
+        className={`min-w-0 truncate font-mono ${
+          skipped ? 'text-[var(--muted)]' : 'text-[var(--text)]'
         }`}
       >
         {row.name}
@@ -196,7 +151,7 @@ function RepositoryRow({ row }: { row: PortfolioRepositoryRow }) {
           {row.strength.toFixed(1)}/10
         </span>
       ) : null}
-      {row.state === 'skipped' && row.reason ? (
+      {skipped && row.reason ? (
         <span className="min-w-0 truncate text-[var(--muted)]">
           {row.reason}
         </span>
@@ -208,7 +163,9 @@ function RepositoryRow({ row }: { row: PortfolioRepositoryRow }) {
 function Counter({ value, label }: { value: number | string; label: string }) {
   return (
     <span>
-      <span className="font-bold tabular-nums text-[var(--text)]">{value}</span>{' '}
+      <span className="font-medium tabular-nums text-[var(--text)]">
+        {value}
+      </span>{' '}
       {label}
     </span>
   );

@@ -17,10 +17,9 @@ export function FileInspector({ report, repository }: FileInspectorProps) {
 
   return (
     <div className="grid gap-3">
-      <p className="text-sm text-[var(--muted)]">
-        Proofly read {report.analyzedCount} of the {report.totalFiles} files in
-        the repository tree. Everything below is what the score was actually
-        computed from.
+      <p className="text-sm leading-6 text-[var(--muted)]">
+        {report.analyzedCount} of the {report.totalFiles} files in the
+        repository were read. The score comes from these files only.
       </p>
 
       <div className="flex w-fit gap-1 border-b border-[var(--border)]">
@@ -76,8 +75,8 @@ export function FileInspector({ report, repository }: FileInspectorProps) {
 
       {tab === 'ignored' && report.ignoredListTruncated ? (
         <p className="text-xs text-[var(--muted)]">
-          Showing the first {files.length} ignored files. The counts above cover
-          all {report.ignoredCount}.
+          Showing the first {files.length}; the counts above cover all{' '}
+          {report.ignoredCount}.
         </p>
       ) : null}
     </div>
@@ -98,7 +97,7 @@ function TabButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`focus-control border-b-2 px-3 py-2 font-mono text-xs font-semibold transition ${
+      className={`focus-control -mb-px border-b-2 px-3 py-2 text-xs font-medium ${
         active
           ? 'border-[var(--accent)] text-[var(--text)]'
           : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]'

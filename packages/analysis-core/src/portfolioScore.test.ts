@@ -61,7 +61,7 @@ function analysis(
       categories: [
         {
           key: 'technical-skills',
-          label: 'Technical Skills',
+          label: 'Technical skills',
           description: '',
           earned: 2.4,
           max: 3,
@@ -69,7 +69,7 @@ function analysis(
         },
         {
           key: 'project-quality',
-          label: 'Project Quality',
+          label: 'Project quality',
           description: '',
           earned: 0.8,
           max: 1.5,
@@ -361,8 +361,8 @@ describe('buildCareerPortfolioScore', () => {
     expect(result.label).toBe('Overall FinTech score');
     expect(result.strongestEvidence).toContain('TypeScript');
     expect(result.strongestEvidence).toContain('Component architecture');
-    expect(result.mainGaps).toContain('project quality');
-    expect(result.mainGaps).toContain('accessibility');
+    expect(result.mainGaps).toContain('Project quality');
+    expect(result.mainGaps).toContain('Accessibility');
     expect(result.disclaimer).toMatch(/not a hiring score/i);
   });
 

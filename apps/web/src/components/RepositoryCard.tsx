@@ -134,15 +134,13 @@ export function RepositoryCard({
   const isRunning = phase === 'running' || phase === 'completing';
 
   return (
-    <article className="surface p-5 sm:p-6">
+    <article className="surface p-5">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="technical-label font-bold text-[var(--accent)]">
-              Repo / {String(rank).padStart(2, '0')}
-            </span>
+            <span className="field-label tabular-nums">{rank}.</span>
             <a
-              className="truncate font-mono text-lg font-semibold text-[var(--text)] transition hover:text-[var(--accent)]"
+              className="truncate font-mono text-base font-medium text-[var(--text)] hover:text-[var(--accent)] hover:underline"
               href={repository.htmlUrl}
               target="_blank"
               rel="noreferrer"
@@ -153,8 +151,8 @@ export function RepositoryCard({
               {relevanceLabel} match
             </span>
           </div>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-            {repository.description ?? 'No repository description provided.'}
+          <p className="mt-2 max-w-measure text-sm text-[var(--muted)]">
+            {repository.description ?? 'No description.'}
           </p>
           {repository.fork && repository.userContribution ? (
             <p
@@ -166,53 +164,53 @@ export function RepositoryCard({
             >
               {repository.userContribution.status}
               {repository.userContribution.verified
-                ? ` · ${repository.userContribution.fileCount} changed file(s) · +${repository.userContribution.additions}/-${repository.userContribution.deletions}`
-                : ` · ${repository.userContribution.branchesInspected} branch(es) inspected`}
+                ? ` · ${repository.userContribution.fileCount} files changed · +${repository.userContribution.additions}/−${repository.userContribution.deletions}`
+                : ` · ${plural(repository.userContribution.branchesInspected, 'branch', 'branches')} inspected`}
             </p>
           ) : null}
         </div>
 
         <div className="flex shrink-0 gap-2">
-          <ScoreTile value={relevanceScore} label="overall match" emphasis />
+          <ScoreTile value={`${relevanceScore}/100`} label="match" emphasis />
           <ScoreTile
-            value={careerRelevanceScore}
-            label={careerRelevanceBand.toLowerCase()}
+            value={`${careerRelevanceScore}%`}
+            label="career fit"
+            title={`${careerRelevanceBand} career relevance`}
           />
         </div>
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 bg-[var(--surface-subtle)] px-3 py-3 font-mono text-xs">
-        <span className="font-semibold uppercase tracking-wide text-[var(--text)]">
+      <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-[var(--border)] py-2.5 text-xs">
+        <span className="font-medium text-[var(--text)]">
           {repository.language ?? 'Language unknown'}
         </span>
         {topSkills.map((skill) => (
           <span
             key={skill.id}
             title={skill.matchedSignals.join(', ')}
-            className={`border-l pl-2 font-medium ${
+            className={
               skill.strength === 'strong'
-                ? 'border-[var(--success)] text-[var(--success)]'
-                : 'border-[var(--warning)] text-[var(--warning)]'
-            }`}
+                ? 'text-[var(--success)]'
+                : 'text-[var(--warning)]'
+            }
           >
             {skill.label}
           </span>
         ))}
-        <span className="text-[var(--muted)]">
-          ★ {repository.stargazersCount}
+        <span className="ml-auto text-[var(--muted)] tabular-nums">
+          {repository.stargazersCount} stars · {repository.forksCount} forks
         </span>
-        <span className="text-[var(--muted)]">⑂ {repository.forksCount}</span>
       </div>
 
-      <p className="mt-4 text-sm leading-6 text-[var(--muted)]">
-        <span className="font-semibold text-[var(--text)]">
+      <p className="mt-3 max-w-measure text-sm text-[var(--muted)]">
+        <span className="font-medium text-[var(--text)]">
           Why this ranks here:{' '}
         </span>
         {whyThisRanks}
       </p>
 
       {strongestEvidence ? (
-        <p className="mt-2 border-l-2 border-[var(--accent)] pl-3 text-sm text-[var(--muted)]">
+        <p className="mt-1.5 max-w-measure text-sm text-[var(--muted)]">
           <span className="font-medium text-[var(--text)]">
             Strongest evidence:
           </span>{' '}
@@ -223,7 +221,7 @@ export function RepositoryCard({
       <div className="mt-1">
         <Collapsible
           title="Ranking components"
-          summary={`${relevanceScore}/100 from five weighted metadata components`}
+          summary={`${relevanceScore}/100 across five weighted metadata signals`}
         >
           <ul className="grid gap-1.5">
             {components.map((component) => (
@@ -250,7 +248,7 @@ export function RepositoryCard({
 
       <div className="mt-4 border-t border-[var(--border)] pt-4">
         <button
-          className="primary-action focus-control px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+          className="primary-action focus-control h-9 px-4 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
           type="button"
           disabled={
             isRunning ||
@@ -263,8 +261,8 @@ export function RepositoryCard({
             : isRunning
               ? 'Reading files…'
               : analysis
-                ? 'Re-run file analysis'
-                : 'Analyze code and score 0–10'}
+                ? 'Re-run analysis'
+                : 'Analyze the code'}
         </button>
 
         {error ? (
@@ -309,30 +307,34 @@ function ScoreTile({
   value,
   label,
   emphasis = false,
+  title,
 }: {
-  value: number;
+  value: string;
   label: string;
   emphasis?: boolean;
+  title?: string;
 }) {
   return (
     <div
-      className={`w-24 border-l px-3 py-1 text-right ${emphasis ? 'border-[var(--accent)]' : 'border-[var(--border)]'}`}
+      title={title}
+      className="w-24 border-l border-[var(--border)] px-3 py-1 text-right"
     >
       <div
-        className={`font-mono text-xl font-bold tabular-nums ${emphasis ? 'text-[var(--accent)]' : 'text-[var(--text)]'}`}
+        className={`text-lg tabular-nums ${emphasis ? 'font-semibold text-[var(--text)]' : 'text-[var(--muted)]'}`}
       >
         {value}
       </div>
-      <div className="technical-label mt-0.5 normal-case tracking-normal">
-        {label}
-      </div>
+      <div className="field-label mt-0.5">{label}</div>
     </div>
   );
 }
 
+function plural(count: number, one: string, many: string): string {
+  return `${count} ${count === 1 ? one : many}`;
+}
+
 function labelClassName(label: RankedRepository['relevanceLabel']): string {
-  const base =
-    'rounded-[5px] px-2 py-0.5 font-mono text-xs font-semibold uppercase tracking-wide';
+  const base = 'rounded-full px-2 py-0.5 text-xs font-medium';
 
   if (label === 'High') {
     return `${base} bg-[var(--success-soft)] text-[var(--success)]`;

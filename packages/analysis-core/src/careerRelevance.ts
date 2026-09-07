@@ -1,3 +1,4 @@
+import { plural } from './text.js';
 import {
   careerRelevanceLabel,
   type CareerPath,
@@ -223,7 +224,7 @@ function buildRationale(
   }
 
   if (strength === 'strong') {
-    return `${dependencyMatchCount} matching dependency declaration(s) plus supporting repository metadata back this skill, though no usage line was quoted from the sampled files.`;
+    return `${plural(dependencyMatchCount, 'matching dependency declaration')} plus supporting repository metadata back this skill, though no usage line was quoted from the sampled files.`;
   }
 
   if (strength === 'moderate') {

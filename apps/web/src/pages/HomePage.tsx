@@ -147,44 +147,37 @@ export function HomePage() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[var(--page)] px-5 py-6 text-[var(--text)] transition-colors sm:px-8 lg:px-10 lg:py-8">
-      <section className="mx-auto max-w-7xl xl:max-w-[84rem]">
-        <nav className="flex items-center justify-between gap-4 border-b border-[var(--border)] pb-5">
-          <div className="flex items-center gap-3">
+    <main className="min-h-screen bg-[var(--page)] px-5 py-5 text-[var(--text)] sm:px-8 lg:px-10">
+      <section className="mx-auto max-w-6xl">
+        <nav className="flex items-center justify-between gap-4 border-b border-[var(--border)] pb-4">
+          <div className="flex items-center gap-2.5">
             <img
-              className="size-12 object-contain"
+              className="size-8 object-contain"
               src="/proofly-logo.svg"
-              alt="Proofly logo"
+              alt=""
             />
-            <div>
-              <p className="text-xl font-bold">Proofly</p>
-              <p className="technical-label mt-0.5">portfolio evidence</p>
-            </div>
+            <p className="text-base font-semibold">Proofly</p>
           </div>
-          <div className="flex items-center gap-3">
-            <a
-              className="focus-control hidden rounded-[7px] border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2 text-xs font-medium text-[var(--muted)] transition hover:border-[var(--border-strong)] hover:text-[var(--text)] md:inline-flex"
-              href="https://github.com"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Powered by public GitHub data
-            </a>
-            <ThemeToggle theme={theme} onToggle={toggleTheme} />
-          </div>
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
         </nav>
 
-        <div className="grid gap-10 py-12 lg:grid-cols-[1.16fr_0.84fr] lg:items-center lg:gap-14 lg:py-16">
-          <div className="max-w-3xl">
-            <p className="section-kicker mb-5">Proofly / Portfolio evidence</p>
-            {/* Sized so the headline settles on three lines from lg upward rather than four. */}
-            <h1 className="max-w-4xl text-[3rem] font-black leading-[1.03] tracking-[-0.045em] text-[var(--text)] md:text-[3.8rem] lg:text-[4.25rem] xl:text-[4.6rem]">
-              See what your GitHub work actually demonstrates.
+        {/* Roomy while the form is the only thing on the page; tighter once results
+            arrive, so it stops competing with them. */}
+        <div
+          className={`grid gap-8 py-10 lg:grid-cols-[1fr_25rem] lg:items-center lg:gap-16 ${
+            submittedUsername ? 'lg:py-10' : 'lg:py-24'
+          }`}
+        >
+          <div>
+            {/* Scales with the viewport so it neither shouts on a desktop nor
+                shrinks to body copy on a laptop; `text-balance` keeps the line
+                breaks even at every width instead of leaving a short last line. */}
+            <h1 className="text-balance text-[clamp(2.125rem,1.4rem+2.1vw,3.125rem)] font-semibold leading-[1.12] tracking-[-0.02em] text-[var(--text)]">
+              Score your GitHub repositories against a career track.
             </h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--muted)] xl:text-xl">
-              Proofly reads the repository, scores how strongly it supports your
-              target career across five portfolio-focused categories, and shows
-              the exact evidence behind every claim.
+            <p className="mt-5 max-w-measure-tight text-lg text-[var(--muted)]">
+              Every score links back to the file and line it came from, so you
+              can see what it was based on.
             </p>
           </div>
 
@@ -209,14 +202,14 @@ export function HomePage() {
           ) : null}
 
           {repositoriesQuery.isFetching ? (
-            <div className="surface p-6 font-mono text-sm text-[var(--muted)]">
-              Reading public repository metadata for @{submittedUsername}…
+            <div className="surface p-5 text-sm text-[var(--muted)]">
+              Reading public repositories for @{submittedUsername}…
             </div>
           ) : null}
 
           {repositoriesQuery.isSuccess && repositories.length === 0 ? (
-            <div className="surface p-6 text-[var(--muted)]">
-              No public owner repositories found for @{submittedUsername}.
+            <div className="surface p-5 text-sm text-[var(--muted)]">
+              @{submittedUsername} has no public repositories of their own.
             </div>
           ) : null}
 
@@ -257,25 +250,23 @@ export function HomePage() {
                   role="alert"
                   className="mb-6 rounded-[var(--radius)] border border-[var(--warning)] bg-[var(--warning-soft)] p-5 text-sm text-[var(--warning)]"
                 >
-                  The overall career score could not be built: {portfolioError}{' '}
-                  Repository rankings below are unaffected.
+                  Could not build the overall career score: {portfolioError}{' '}
+                  The rankings below are unaffected.
                 </div>
               ) : null}
 
-              <div className="mb-5 mt-10 flex flex-col gap-3 border-b border-[var(--border)] pb-5 md:flex-row md:items-end md:justify-between">
+              <div className="mb-4 mt-10 flex flex-col gap-3 border-b border-[var(--border)] pb-4 md:flex-row md:items-end md:justify-between">
                 <div>
-                  <p className="section-kicker mb-2">02 / Repositories</p>
-                  <h2 className="text-2xl font-bold text-[var(--text)]">
+                  <h2 className="text-xl font-semibold tracking-tight text-[var(--text)]">
                     Ranked repositories for @{repositoriesQuery.data?.username}
                   </h2>
-                  <p className="technical-label mt-1">
+                  <p className="field-label mt-1">
                     Target career: {careerPathLabels[activeCareerPath]}
                   </p>
                 </div>
-                <p className="max-w-xl text-sm leading-6 text-[var(--muted)]">
-                  Ranking is an evidence fit, not a hiring score. Forks use only
-                  verified contribution paths and languages; run the code
-                  analysis to see the evidence-backed 0–10 score.
+                <p className="max-w-measure-tight text-sm text-[var(--muted)]">
+                  Ranking uses repository metadata. Run the code analysis on a
+                  repository to score it from its source.
                 </p>
               </div>
               <div className="grid gap-4">

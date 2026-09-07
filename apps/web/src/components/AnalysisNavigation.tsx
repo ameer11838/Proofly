@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react';
 const sections = [
   ['overview', 'Overview'],
   ['scores', 'Scores'],
-  ['career', 'Career Fit'],
-  ['quality', 'Code Quality'],
-  ['evidence', 'Code Evidence'],
+  ['career', 'Career fit'],
+  ['quality', 'Code quality'],
+  ['evidence', 'Evidence'],
   ['commits', 'Commits'],
   ['improvements', 'Improvements'],
   ['files', 'Files'],
@@ -36,9 +36,9 @@ export function AnalysisNavigation({ prefix }: { prefix: string }) {
   return (
     <nav
       aria-label="Analysis sections"
-      className="sticky top-0 z-20 overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)] px-5 py-2"
+      className="sticky top-0 z-20 overflow-x-auto border-b border-[var(--border)] bg-[var(--surface)] px-4"
     >
-      <ul className="flex min-w-max gap-1">
+      <ul className="flex min-w-max">
         {sections.map(([key, label]) => {
           const id = sectionId(key);
           return (
@@ -46,10 +46,10 @@ export function AnalysisNavigation({ prefix }: { prefix: string }) {
             <a
               href={`#${id}`}
               aria-current={active === id ? 'location' : undefined}
-              className={`focus-control block rounded-[5px] px-3 py-2 font-mono text-xs font-semibold uppercase tracking-wide transition ${
+              className={`focus-control -mb-px block border-b-2 px-3 py-2 text-xs font-medium ${
                 active === id
-                  ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
-                  : 'text-[var(--muted)] hover:text-[var(--text)]'
+                  ? 'border-[var(--accent)] text-[var(--text)]'
+                  : 'border-transparent text-[var(--muted)] hover:text-[var(--text)]'
               }`}
             >
               {label}

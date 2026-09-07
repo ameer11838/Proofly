@@ -1,5 +1,6 @@
 import {
   analyzeRepositoryEvidence,
+  plural,
   type RepositoryFileEvidence,
 } from '@proofly/analysis-core';
 import type {
@@ -89,7 +90,7 @@ export async function analyzeRepositoryFromGitHub(
   report({
     stage: 'fetching-repository',
     status: 'active',
-    message: `FETCHING ${owner}/${repo} METADATA...`,
+    message: `Fetching ${owner}/${repo}`,
     stageProgress: 0,
   });
 
@@ -115,7 +116,7 @@ export async function analyzeRepositoryFromGitHub(
   report({
     stage: 'fetching-repository',
     status: 'active',
-    message: `METADATA OK · ${repository.language ?? 'UNKNOWN LANGUAGE'} · DEFAULT BRANCH ${repository.defaultBranch}`,
+    message: `${repository.language ?? 'Language unknown'}, default branch ${repository.defaultBranch}`,
     stageProgress: 0.5,
   });
 
@@ -141,7 +142,7 @@ export async function analyzeRepositoryFromGitHub(
   report({
     stage: 'fetching-repository',
     status: 'active',
-    message: 'FETCHING REPOSITORY TREE...',
+    message: 'Fetching the file tree',
     stageProgress: 0.5,
   });
 
@@ -156,7 +157,7 @@ export async function analyzeRepositoryFromGitHub(
   report({
     stage: 'fetching-repository',
     status: 'complete',
-    message: `TREE OK · ${blobs.length} FILE(S) IN REPOSITORY`,
+    message: `${blobs.length} files in the repository`,
     stageProgress: 1,
   });
 
@@ -175,7 +176,7 @@ export async function analyzeRepositoryFromGitHub(
   report({
     stage: 'inspecting-code',
     status: 'active',
-    message: `SELECTED ${selected.length} OF ${blobs.length} FILE(S) FOR INSPECTION`,
+    message: `Selected ${selected.length} of ${blobs.length} files to read`,
     counters: { filesSelected: selected.length },
     stageProgress: 0,
   });
@@ -199,7 +200,7 @@ export async function analyzeRepositoryFromGitHub(
         report({
           stage: 'inspecting-code',
           status: 'active',
-          message: `READ ${file.path}`,
+          message: `Read ${file.path}`,
           file: file.path,
           counters: {
             filesInspected: downloaded,
@@ -216,7 +217,7 @@ export async function analyzeRepositoryFromGitHub(
         report({
           stage: 'inspecting-code',
           status: 'active',
-          message: `SKIPPED ${file.path} (UNREADABLE)`,
+          message: `Could not read ${file.path}`,
           counters: {
             filesInspected: downloaded,
             filesSelected: selected.length,
@@ -296,7 +297,7 @@ export async function analyzeRepositoryFromGitHub(
   report({
     stage: 'inspecting-code',
     status: 'complete',
-    message: `${files.length} FILE(S) READ · ${Math.round(totalBytes / 1000)} KB OF SOURCE INSPECTED`,
+    message: `Read ${files.length} files, ${Math.round(totalBytes / 1000)} KB of source`,
     counters: { filesInspected: files.length, filesSelected: selected.length },
     stageProgress: 1,
   });
@@ -325,7 +326,7 @@ function analyzeVerifiedContribution(
   report({
     stage: 'fetching-repository',
     status: 'complete',
-    message: `${contribution.status.toUpperCase()} · ${contribution.branchesInspected} BRANCHES INSPECTED`,
+    message: `${contribution.status}, across ${contribution.branchesInspected} branches`,
     stageProgress: 1,
   });
 
@@ -340,7 +341,7 @@ function analyzeVerifiedContribution(
   report({
     stage: 'inspecting-code',
     status: 'complete',
-    message: `${admitted.length} CONTRIBUTED CODE HUNK(S) READ · ${Math.round(totalBytes / 1000)} KB INSPECTED`,
+    message: `Read ${admitted.length} contributed hunks, ${Math.round(totalBytes / 1000)} KB`,
     counters: {
       filesSelected: evidenceFiles.length,
       filesInspected: admitted.length,
@@ -383,7 +384,7 @@ function analyzeVerifiedContribution(
         path: file.path,
         status: analyzedPaths.has(file.path) ? 'analyzed' : 'ignored',
         reason: analyzedPaths.has(file.path)
-          ? `Changed in ${file.commits} verified commit(s) by @${contribution.username}.`
+          ? `Changed in ${plural(file.commits, 'verified commit')} by @${contribution.username}.`
           : 'No readable added-line patch was available from GitHub.',
         sizeBytes: null,
       })),

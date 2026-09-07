@@ -270,7 +270,7 @@ describe('AnalysisPanel', () => {
     expect(screen.getAllByText('5').length).toBeGreaterThan(0);
     expect(screen.getAllByText(/pct_change/).length).toBeGreaterThan(0);
     expect(
-      screen.getAllByRole('link', { name: /open file on github/i })[0],
+      screen.getAllByRole('link', { name: /open on github/i })[0],
     ).toHaveAttribute(
       'href',
       'https://github.com/q/vol-surface/blob/main/src/backtest.py#L3-L5',
@@ -280,7 +280,10 @@ describe('AnalysisPanel', () => {
   it('shows the improvement plan without promising more than the model awards', async () => {
     render(<AnalysisPanel analysis={analysis} />);
 
-    await userEvent.click(screen.getByText('Improve this repo'));
+    // "Improvements" is both a section-nav link and the disclosure title.
+    await userEvent.click(
+      screen.getByText('Improvements', { selector: 'summary span' }),
+    );
 
     expect(screen.getByText(/\+0\.8/)).toBeInTheDocument();
     expect(screen.getAllByText('Add automated tests').length).toBeGreaterThan(
@@ -292,7 +295,7 @@ describe('AnalysisPanel', () => {
   it('lets the user inspect analyzed and ignored files', async () => {
     render(<AnalysisPanel analysis={analysis} />);
 
-    await userEvent.click(screen.getByText('Files Proofly inspected'));
+    await userEvent.click(screen.getByText('Files inspected'));
     expect(screen.getByRole('link', { name: 'README.md' })).toBeInTheDocument();
 
     await userEvent.click(

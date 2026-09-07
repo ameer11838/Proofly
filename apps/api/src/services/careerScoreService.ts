@@ -115,7 +115,7 @@ export async function buildUserCareerScore(
   report({
     stage: 'discovering',
     status: 'active',
-    message: `LISTING PUBLIC REPOSITORIES FOR @${username.toUpperCase()}...`,
+    message: `Listing public repositories for @${username}`,
   });
 
   const [allRepositories, profile] = await Promise.all([
@@ -162,8 +162,8 @@ export async function buildUserCareerScore(
     status: 'complete',
     message:
       allRepositories.length > repositories.length
-        ? `DISCOVERED ${allRepositories.length} REPOSITORIES · CONSIDERING THE FIRST ${repositories.length}`
-        : `DISCOVERED ${repositories.length} PUBLIC REPOSITORIES`,
+        ? `Found ${allRepositories.length} repositories, considering the first ${repositories.length}`
+        : `Found ${repositories.length} public repositories`,
     counters: { discovered: repositories.length },
     stageProgress: 1,
   });
@@ -171,7 +171,7 @@ export async function buildUserCareerScore(
   report({
     stage: 'ranking',
     status: 'active',
-    message: `RANKING ${repositories.length} REPOSITORIES BY CAREER FIT...`,
+    message: `Ranking ${repositories.length} repositories by career fit`,
   });
 
   // Every discovered repository is ranked from metadata before anything is read.
@@ -180,7 +180,7 @@ export async function buildUserCareerScore(
   report({
     stage: 'ranking',
     status: 'complete',
-    message: `RANKED ${ranked.length} REPOSITORIES`,
+    message: `Ranked ${ranked.length} repositories`,
     stageProgress: 1,
   });
 
@@ -199,7 +199,7 @@ export async function buildUserCareerScore(
       report({
         stage: 'analyzing',
         status: 'active',
-        message: `SKIPPED ${entry.repository.name}`,
+        message: `Skipped ${entry.repository.name}`,
         repository: { name: entry.repository.name, state: 'skipped', reason },
       });
       continue;
@@ -211,7 +211,7 @@ export async function buildUserCareerScore(
   report({
     stage: 'analyzing',
     status: 'active',
-    message: `QUEUED ${queue.length} REPOSITORIES FOR DEEP ANALYSIS`,
+    message: `Queued ${queue.length} repositories for full analysis`,
     counters: { queued: queue.length, skipped: outcomes.size },
     stageProgress: 0,
   });
@@ -237,7 +237,7 @@ export async function buildUserCareerScore(
     report({
       stage: 'analyzing',
       status: 'active',
-      message: `ANALYZING ${repository.name}...`,
+      message: `Analyzing ${repository.name}`,
       repository: { name: repository.name, state: 'analyzing' },
       stageProgress: completed / Math.max(queue.length, 1),
     });
@@ -276,7 +276,7 @@ export async function buildUserCareerScore(
       report({
         stage: 'analyzing',
         status: 'active',
-        message: `${repository.name.toUpperCase()} ✓ ${analysis.rating.score.toFixed(1)}/10 · ${analysis.careerRelevance.score}% CAREER RELEVANCE${cached ? ' (CACHED)' : ''}`,
+        message: `${repository.name}: ${analysis.rating.score.toFixed(1)}/10, ${analysis.careerRelevance.score}% career relevance${cached ? ' (cached)' : ''}`,
         repository: {
           name: repository.name,
           state: 'analyzed',
@@ -306,7 +306,7 @@ export async function buildUserCareerScore(
       report({
         stage: 'analyzing',
         status: 'active',
-        message: `SKIPPED ${repository.name.toUpperCase()} · ${reason.toUpperCase()}`,
+        message: `Skipped ${repository.name}: ${reason}`,
         repository: { name: repository.name, state: 'skipped', reason },
         counters: { deeplyAnalyzed, skipped },
         stageProgress: completed / Math.max(queue.length, 1),
@@ -317,7 +317,7 @@ export async function buildUserCareerScore(
   report({
     stage: 'analyzing',
     status: 'complete',
-    message: `${deeplyAnalyzed} REPOSITORIES ANALYZED · ${skipped} SKIPPED`,
+    message: `${deeplyAnalyzed} repositories analyzed, ${skipped} skipped`,
     counters: { deeplyAnalyzed, skipped },
     stageProgress: 1,
   });
@@ -337,7 +337,7 @@ export async function buildUserCareerScore(
   report({
     stage: 'scoring',
     status: 'active',
-    message: 'SCORING PORTFOLIO EVIDENCE...',
+    message: 'Scoring the portfolio',
   });
 
   const portfolio = buildCareerPortfolioScore({
@@ -355,7 +355,7 @@ export async function buildUserCareerScore(
   report({
     stage: 'scoring',
     status: 'complete',
-    message: `PORTFOLIO SCORE ${portfolio.score.toFixed(1)}/10 FROM ${deeplyAnalyzed} ANALYZED REPOSITORIES`,
+    message: `Portfolio score ${portfolio.score.toFixed(1)}/10 from ${deeplyAnalyzed} repositories`,
     stageProgress: 1,
   });
 

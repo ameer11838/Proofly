@@ -21,16 +21,16 @@ export function Collapsible({
 }: CollapsibleProps) {
   return (
     <details
-      className="group my-3 overflow-hidden rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-subtle)] transition-colors open:border-[var(--border-strong)] open:bg-[var(--surface)]"
+      className="group my-2 overflow-hidden rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)]"
       open={defaultOpen}
     >
-      <summary className="focus-control flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 outline-none transition hover:bg-[var(--surface-raised)]">
+      <summary className="focus-control flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 outline-none hover:bg-[var(--surface-raised)]">
         <span className="flex min-w-0 flex-col">
-          <span className="text-base font-bold text-[var(--text)] group-hover:text-[var(--accent)]">
+          <span className="text-sm font-semibold text-[var(--text)]">
             {title}
           </span>
           {summary ? (
-            <span className="mt-0.5 text-sm leading-5 text-[var(--muted)]">
+            <span className="mt-0.5 text-xs leading-5 text-[var(--muted)]">
               {summary}
             </span>
           ) : null}
@@ -38,7 +38,7 @@ export function Collapsible({
         <span className="flex shrink-0 items-center gap-3">
           {badge}
           <svg
-            className="size-5 text-[var(--muted)] transition-transform duration-200 group-open:rotate-180 group-hover:text-[var(--accent)]"
+            className="size-4 shrink-0 text-[var(--muted)] transition-transform duration-200 group-open:rotate-180"
             viewBox="0 0 16 16"
             fill="none"
             aria-hidden="true"

@@ -11,13 +11,13 @@
   color-scheme: light;
   --page: #f6f8fa;
   --surface: #ffffff;
-  --surface-subtle: #f3f4f6;
+  --surface-subtle: #f6f8fa;
   --surface-raised: #eaeef2;
-  --surface-strong: #eef2f6;
-  --border: #d0d7de;
+  --surface-strong: #f6f8fa;
+  --border: #d1d9e0;
   --border-strong: #8c959f;
   --text: #1f2328;
-  --muted: #57606a;
+  --muted: #59636e;
   --accent: #0969da;
   --accent-hover: #0550ae;
   --accent-soft: #ddf4ff;
@@ -27,9 +27,9 @@
   --warning-soft: #fff8c5;
   --error: #cf222e;
   --error-soft: #ffebe9;
-  --radius: 8px;
+  --radius: 6px;
   --radius-sm: 6px;
-  --shadow-subtle: 0 1px 2px rgba(31, 35, 40, 0.06);
+  --shadow-subtle: 0 1px 0 rgba(31, 35, 40, 0.04);
 }
 
 body {
@@ -37,14 +37,12 @@ body {
   background-color: var(--page);
   color: var(--text);
   font-family: var(--font-sans);
-  font-size: 1rem;
+  font-size: 0.9375rem;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
 
 html {
-  font-size: 17px;
   scroll-behavior: smooth;
 }
 
@@ -62,24 +60,24 @@ html {
 .dark {
   color-scheme: dark;
   --page: #0d1117;
-  --surface: #161b22;
-  --surface-subtle: #1c2128;
-  --surface-raised: #262c36;
-  --surface-strong: #21262d;
-  --border: #30363d;
-  --border-strong: #6e7681;
+  --surface: #151b23;
+  --surface-subtle: #0d1117;
+  --surface-raised: #212830;
+  --surface-strong: #0d1117;
+  --border: #3d444d;
+  --border-strong: #656c76;
   --text: #f0f6fc;
-  --muted: #b1bac4;
-  --accent: #58a6ff;
-  --accent-hover: #79c0ff;
-  --accent-soft: #1b365d;
+  --muted: #9198a1;
+  --accent: #4493f8;
+  --accent-hover: #6cb6ff;
+  --accent-soft: #121d2f;
   --success: #3fb950;
-  --success-soft: #173b24;
+  --success-soft: #0f2417;
   --warning: #d29922;
-  --warning-soft: #3b2e12;
+  --warning-soft: #272111;
   --error: #f85149;
-  --error-soft: #4c1f24;
-  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.38);
+  --error-soft: #25171c;
+  --shadow-subtle: 0 1px 0 rgba(1, 4, 9, 0.6);
 }
 
 @layer components {
@@ -96,45 +94,29 @@ html {
     background: var(--surface-subtle);
   }
 
-  .section-kicker {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    line-height: 1.5;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-
-  .technical-label {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    line-height: 1.5;
-    text-transform: uppercase;
+  /* Small label above or beside a value. Deliberately plain: the value is the thing
+     worth reading, not its caption. */
+  .field-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.4;
     color: var(--muted);
   }
 
   .primary-action {
     border-radius: var(--radius-sm);
+    border: 1px solid transparent;
     background: var(--accent);
     color: white;
-    transition:
-      background-color 160ms ease,
-      transform 160ms ease;
+    transition: background-color 120ms ease;
   }
 
   .primary-action:hover:not(:disabled) {
     background: var(--accent-hover);
   }
 
-  .primary-action:active:not(:disabled) {
-    transform: translateY(1px);
-  }
-
   .focus-control:focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--accent) 65%, transparent);
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
 }

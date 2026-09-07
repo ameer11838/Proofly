@@ -27,10 +27,10 @@ export const scoreCategoryKeys = [
 export type ScoreCategoryKey = (typeof scoreCategoryKeys)[number];
 
 export const scoreCategoryLabels: Record<ScoreCategoryKey, string> = {
-  'technical-skills': 'Technical Skills',
-  'career-relevance': 'Career Relevance',
-  'creativity-complexity': 'Creativity & Complexity',
-  'project-quality': 'Project Quality',
+  'technical-skills': 'Technical skills',
+  'career-relevance': 'Career relevance',
+  'creativity-complexity': 'Creativity & complexity',
+  'project-quality': 'Project quality',
   presentation: 'Presentation',
 };
 
@@ -257,12 +257,12 @@ export const analysisStages = [
 export type AnalysisStage = (typeof analysisStages)[number];
 
 export const analysisStageLabels: Record<AnalysisStage, string> = {
-  'fetching-repository': 'FETCHING REPOSITORY',
-  'inspecting-code': 'INSPECTING CODE',
-  'extracting-evidence': 'EXTRACTING EVIDENCE',
-  'career-matching': 'CAREER MATCHING',
-  scoring: 'SCORING',
-  'building-report': 'BUILDING REPORT',
+  'fetching-repository': 'Fetching repository',
+  'inspecting-code': 'Inspecting code',
+  'extracting-evidence': 'Extracting evidence',
+  'career-matching': 'Matching to career',
+  scoring: 'Scoring',
+  'building-report': 'Building report',
 };
 
 /**
@@ -396,10 +396,10 @@ export const portfolioStages = [
 export type PortfolioStage = (typeof portfolioStages)[number];
 
 export const portfolioStageLabels: Record<PortfolioStage, string> = {
-  discovering: 'DISCOVERING REPOSITORIES',
-  ranking: 'RANKING BY CAREER FIT',
-  analyzing: 'ANALYZING REPOSITORIES',
-  scoring: 'SCORING PORTFOLIO',
+  discovering: 'Discovering repositories',
+  ranking: 'Ranking by career fit',
+  analyzing: 'Analyzing repositories',
+  scoring: 'Scoring portfolio',
 };
 
 export type PortfolioRepositoryState = 'analyzing' | 'analyzed' | 'skipped';

@@ -10,9 +10,8 @@ interface ImprovementSectionProps {
 export function ImprovementSection({ plan }: ImprovementSectionProps) {
   if (plan.actions.length === 0) {
     return (
-      <p className="rounded-[7px] bg-[var(--success-soft)] px-4 py-3 text-sm text-[var(--success)]">
-        Every scored check already passes. There is no improvement Proofly can
-        derive from its own scoring model.
+      <p className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--success-soft)] px-3 py-2 text-sm text-[var(--success)]">
+        Every scored check already passes.
       </p>
     );
   }
@@ -23,7 +22,7 @@ export function ImprovementSection({ plan }: ImprovementSectionProps) {
   return (
     <div className="grid gap-4">
       <div className="flex flex-wrap items-center gap-3">
-        <p className="font-mono text-2xl font-black tracking-tight text-[var(--text)]">
+        <p className="text-xl font-semibold tabular-nums text-[var(--text)]">
           {plan.currentScore.toFixed(1)}
           <span
             className="mx-2 text-[var(--border-strong)]"
@@ -31,16 +30,16 @@ export function ImprovementSection({ plan }: ImprovementSectionProps) {
           >
             →
           </span>
-          <span className="text-[var(--accent)]">
+          <span className="text-[var(--success)]">
             {plan.potentialScore.toFixed(1)}
           </span>
-          <span className="ml-1 text-base font-semibold text-[var(--muted)]">
+          <span className="ml-1 text-sm font-normal text-[var(--muted)]">
             / {plan.maxScore.toFixed(0)}
           </span>
         </p>
-        <p className="text-sm text-[var(--muted)]">
-          Score-linked actions show recoverable points. Source-quality actions
-          are prioritized by engineering impact without inventing score credit.
+        <p className="text-sm leading-6 text-[var(--muted)]">
+          Actions tied to the score show the points they recover. The rest are
+          ordered by how much they would improve the code.
         </p>
       </div>
 
@@ -62,20 +61,20 @@ function ActionGroup({
   if (actions.length === 0) return null;
   return (
     <section>
-      <h4 className="technical-label mb-2 font-bold text-[var(--text)]">
+      <h4 className="field-label mb-2 font-medium text-[var(--text)]">
         {title}
       </h4>
       <ol className="grid gap-3">
         {actions.map((action, index) => (
           <li
             key={action.id}
-            className={`grid gap-2 rounded-[var(--radius-sm)] border-l-4 px-4 py-4 sm:grid-cols-[3rem_minmax(0,1fr)_auto] sm:items-start sm:gap-4 ${impactSurface(action.impact)}`}
+            className={`grid gap-2 rounded-[var(--radius-sm)] border border-l-2 border-[var(--border)] px-3 py-3 sm:grid-cols-[1.5rem_minmax(0,1fr)_auto] sm:items-start sm:gap-3 ${impactSurface(action.impact)}`}
           >
-            <span className="font-mono text-xs font-bold text-[var(--accent)]">
-              {String(index + 1).padStart(2, '0')}
+            <span className="text-xs tabular-nums text-[var(--muted)]">
+              {index + 1}.
             </span>
             <div>
-              <p className="text-base font-bold text-[var(--text)]">
+              <p className="text-sm font-semibold text-[var(--text)]">
                 {action.title}
               </p>
               <p className="text-sm leading-6 text-[var(--muted)]">
@@ -86,18 +85,18 @@ function ActionGroup({
                   {action.paths.join(' · ')}
                 </p>
               ) : null}
-              <p className="technical-label mt-1">
+              <p className="field-label mt-1">
                 {scoreCategoryLabels[action.category]}
               </p>
               {action.suggestedApproach ? (
-                <details className="mt-3 rounded-[7px] border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-                  <summary className="focus-control cursor-pointer font-mono text-sm font-bold text-[var(--accent)]">
-                    How can I improve this?
+                <details className="mt-3 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5">
+                  <summary className="focus-control cursor-pointer text-sm font-medium text-[var(--accent)]">
+                    How to fix it
                   </summary>
                   <div className="mt-2 grid gap-2 text-sm leading-6 text-[var(--muted)]">
                     <p>{action.suggestedApproach}</p>
                     {action.example ? (
-                      <pre className="overflow-x-auto rounded-[6px] bg-[#080c14] p-3 font-mono text-xs leading-5 text-slate-200">
+                      <pre className="overflow-x-auto rounded-[var(--radius-sm)] border border-[#30363d] bg-[#0d1117] p-3 font-mono text-xs leading-5 text-[#e6edf3]">
                         <code>{action.example}</code>
                       </pre>
                     ) : null}
@@ -106,7 +105,7 @@ function ActionGroup({
               ) : null}
             </div>
             <span
-              className={`w-fit rounded-[5px] px-2 py-1 font-mono text-xs font-bold uppercase ${impactClass(action.impact)}`}
+              className={`w-fit rounded-full px-2 py-0.5 text-xs font-medium ${impactClass(action.impact)}`}
             >
               {action.impact ?? 'Medium'}
               {action.points > 0 ? ` · +${action.points.toFixed(1)}` : ''}
@@ -130,10 +129,10 @@ function impactClass(impact: ImprovementPlan['actions'][number]['impact']) {
 
 function impactSurface(impact: ImprovementPlan['actions'][number]['impact']) {
   if (impact === 'High') {
-    return 'border-[var(--warning)] bg-[var(--warning-soft)]';
+    return 'border-[var(--warning)] bg-[var(--surface)]';
   }
   if (impact === 'Low') {
-    return 'border-[var(--border-strong)] bg-[var(--surface-subtle)]';
+    return 'border-[var(--border)] bg-[var(--surface)]';
   }
-  return 'border-[var(--warning)] bg-[var(--warning-soft)]';
+  return 'border-[var(--border-strong)] bg-[var(--surface)]';
 }

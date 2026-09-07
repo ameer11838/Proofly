@@ -1,3 +1,4 @@
+import { plural } from './text.js';
 import type {
   CareerPath,
   EvidenceReference,
@@ -261,7 +262,7 @@ function careerSkillComponent(
     detail:
       strong.length + moderate.length === 0
         ? 'No career skill matched the language, topics, or description.'
-        : `${strong.length} strong and ${moderate.length} partial skill match(es) from metadata: ${[
+        : `${strong.length} strong and ${plural(moderate.length, 'partial skill match', 'partial skill matches')} from metadata: ${[
             ...strong,
             ...moderate,
           ]
@@ -322,7 +323,7 @@ function activityComponent(repository: GitHubRepository): RankComponent {
     label: 'Recent activity',
     earned: Math.round(fraction * componentMaxima.activity),
     max: componentMaxima.activity,
-    detail: `Last pushed ${days} day(s) ago.`,
+    detail: `Last pushed ${plural(days, 'day')} ago.`,
   };
 }
 
@@ -333,7 +334,7 @@ function engagementComponent(repository: GitHubRepository): RankComponent {
     label: 'Public engagement',
     earned: Math.min(interactions, componentMaxima.engagement),
     max: componentMaxima.engagement,
-    detail: `${repository.stargazersCount} star(s) and ${repository.forksCount} fork(s). This is a weak signal and is capped at ${componentMaxima.engagement} points.`,
+    detail: `${plural(repository.stargazersCount, 'star')} and ${plural(repository.forksCount, 'fork')}. This is a weak signal and is capped at ${componentMaxima.engagement} points.`,
   };
 }
 

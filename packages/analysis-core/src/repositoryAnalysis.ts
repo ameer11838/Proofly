@@ -89,7 +89,7 @@ export function analyzeRepositoryEvidence({
   report({
     stage: 'extracting-evidence',
     status: 'active',
-    message: `INSPECTED ${dependencies.length} DECLARED DEPENDENCIES`,
+    message: `Read ${dependencies.length} declared dependencies`,
     counters: { dependencies: dependencies.length },
   });
 
@@ -97,7 +97,7 @@ export function analyzeRepositoryEvidence({
   report({
     stage: 'extracting-evidence',
     status: 'active',
-    message: `MATCHING TECHNICAL SIGNALS ACROSS ${skills.length} SKILLS...`,
+    message: `Matching technical signals across ${skills.length} skills`,
   });
 
   const codeEvidence = extractCodeEvidence(
@@ -116,7 +116,7 @@ export function analyzeRepositoryEvidence({
     report({
       stage: 'extracting-evidence',
       status: 'active',
-      message: `CODE EVIDENCE FOUND: ${evidence.detected.toUpperCase()}`,
+      message: `Evidence: ${evidence.detected}`,
       file: evidence.path,
       evidence: {
         label: evidence.skillLabel,
@@ -132,7 +132,7 @@ export function analyzeRepositoryEvidence({
     report({
       stage: 'extracting-evidence',
       status: 'active',
-      message: `CODE QUALITY ${finding.kind.toUpperCase()}: ${finding.title.toUpperCase()}`,
+      message: `${finding.kind === 'strength' ? 'Strength' : 'Improvement'}: ${finding.title}`,
       file: finding.path,
       evidence: {
         label:
@@ -148,7 +148,7 @@ export function analyzeRepositoryEvidence({
   report({
     stage: 'extracting-evidence',
     status: 'complete',
-    message: `${codeEvidence.length + codeQuality.findings.length} SOURCE EVIDENCE SIGNAL(S) EXTRACTED`,
+    message: `Extracted ${codeEvidence.length + codeQuality.findings.length} signals from source`,
     counters: {
       evidenceSignals: codeEvidence.length + codeQuality.findings.length,
     },
@@ -157,7 +157,7 @@ export function analyzeRepositoryEvidence({
   report({
     stage: 'career-matching',
     status: 'active',
-    message: `COMPARING EVIDENCE AGAINST ${skills.length} CAREER SKILLS...`,
+    message: `Comparing that evidence against ${skills.length} career skills`,
   });
 
   const relevance = buildCareerRelevance({
@@ -175,14 +175,14 @@ export function analyzeRepositoryEvidence({
     report({
       stage: 'career-matching',
       status: 'active',
-      message: `CAREER SIGNAL DETECTED: ${skill.label.toUpperCase()}`,
+      message: `Career skill evidenced: ${skill.label}`,
     });
   }
 
   report({
     stage: 'career-matching',
     status: 'complete',
-    message: `${relevance.score}% CAREER RELEVANCE FROM ${strongSkills.length} STRONG SKILL(S)`,
+    message: `${relevance.score}% career relevance from ${strongSkills.length} strong skills`,
     counters: { skillsMatched: strongSkills.length },
   });
 
@@ -201,7 +201,7 @@ export function analyzeRepositoryEvidence({
   report({
     stage: 'scoring',
     status: 'active',
-    message: 'SCORING PROJECT EVIDENCE ACROSS FIVE CATEGORIES...',
+    message: 'Scoring across the five categories',
   });
 
   const { breakdown, improvementPlan: scoredImprovementPlan } =
@@ -215,13 +215,13 @@ export function analyzeRepositoryEvidence({
   report({
     stage: 'scoring',
     status: 'complete',
-    message: `PROOFLY SCORE ${breakdown.score.toFixed(1)}/${breakdown.maxScore.toFixed(0)} · ${engineering.score}% PROJECT STRENGTH`,
+    message: `Score ${breakdown.score.toFixed(1)}/${breakdown.maxScore.toFixed(0)}, ${engineering.score}% project strength`,
   });
 
   report({
     stage: 'building-report',
     status: 'active',
-    message: 'BUILDING PORTFOLIO ASSESSMENT...',
+    message: 'Building the report',
   });
 
   const findings = buildFindings(context, breakdown, improvementPlan);
@@ -229,7 +229,7 @@ export function analyzeRepositoryEvidence({
   report({
     stage: 'building-report',
     status: 'complete',
-    message: `REPORT READY · ${findings.length} FINDING(S) · ${improvementPlan.actions.length} IMPROVEMENT(S)`,
+    message: `Report ready: ${findings.length} findings, ${improvementPlan.actions.length} improvements`,
   });
 
   return {

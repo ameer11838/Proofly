@@ -293,7 +293,7 @@ describe('analyzeRepositoryEvidence', () => {
     const result = analyze('backend-engineering');
 
     expect(
-      result.findings.some((finding) => finding.category === 'Project Quality'),
+      result.findings.some((finding) => finding.category === 'Project quality'),
     ).toBe(true);
     expect(result.analyzedFiles).toContain('README.md');
     expect(result.fileReport.analyzedCount).toBe(files.length);

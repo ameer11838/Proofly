@@ -41,8 +41,8 @@ const filters: Array<{ key: EvidenceFilter; label: string }> = [
   { key: 'all', label: 'All' },
   { key: 'strengths', label: 'Strengths' },
   { key: 'improvements', label: 'Improvements' },
-  { key: 'career', label: 'Career Evidence' },
-  { key: 'quality', label: 'Code Quality' },
+  { key: 'career', label: 'Career evidence' },
+  { key: 'quality', label: 'Code quality' },
 ];
 
 const severities: Array<'all' | FindingSeverity> = [
@@ -81,9 +81,8 @@ export function CodeEvidenceSection({
 
   if (items.length === 0) {
     return (
-      <p className="surface-subtle px-4 py-3 text-sm text-[var(--muted)]">
-        No source line in the analyzed files produced a reliable technical or
-        code-quality finding. Nothing here is inferred.
+      <p className="surface-subtle px-3 py-2.5 text-sm text-[var(--muted)]">
+        No line in the files that were read produced a reliable finding.
       </p>
     );
   }
@@ -113,10 +112,9 @@ export function CodeEvidenceSection({
 
   return (
     <div className="grid gap-5">
-      <p className="text-sm text-[var(--muted)]">
-        Every fragment is copied from inspected source. The highlighted line
-        triggered the finding; fork evidence remains limited to verified added
-        lines.
+      <p className="text-sm leading-6 text-[var(--muted)]">
+        Each fragment is copied from the source that was read, and the
+        highlighted line is the one that triggered the finding.
       </p>
 
       <div className="sticky top-0 z-10 grid gap-3 border-y border-[var(--border)] bg-[var(--surface)] py-3">
@@ -135,12 +133,12 @@ export function CodeEvidenceSection({
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <label className="technical-label" htmlFor="evidence-file-filter">
+          <label className="field-label" htmlFor="evidence-file-filter">
             File
           </label>
           <select
             id="evidence-file-filter"
-            className="focus-control min-w-48 rounded-[6px] border border-[var(--border)] bg-[var(--surface-subtle)] px-2.5 py-1.5 font-mono text-xs text-[var(--text)]"
+            className="focus-control min-w-48 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 font-mono text-xs text-[var(--text)]"
             value={file}
             onChange={(event) => {
               setFile(event.target.value);
@@ -154,7 +152,7 @@ export function CodeEvidenceSection({
               </option>
             ))}
           </select>
-          <span className="technical-label ml-1">Severity</span>
+          <span className="field-label ml-1">Severity</span>
           {severities.map((option) => (
             <FilterButton
               key={option}
@@ -170,21 +168,21 @@ export function CodeEvidenceSection({
           <div className="ml-auto flex items-center gap-1">
             <button
               type="button"
-              className="focus-control rounded-[6px] border border-[var(--border)] px-2 py-1 text-xs text-[var(--muted)] disabled:opacity-40"
+              className="focus-control rounded-[var(--radius-sm)] border border-[var(--border)] px-2 py-1 text-xs text-[var(--muted)] hover:bg-[var(--surface-raised)] disabled:opacity-40"
               disabled={visible.length < 2}
               onClick={() => jump(-1)}
               aria-label="Previous finding"
             >
               ←
             </button>
-            <span className="w-14 text-center font-mono text-xs text-[var(--muted)]">
+            <span className="w-14 text-center text-xs tabular-nums text-[var(--muted)]">
               {visible.length === 0
                 ? '0 / 0'
                 : `${safeIndex + 1} / ${visible.length}`}
             </span>
             <button
               type="button"
-              className="focus-control rounded-[6px] border border-[var(--border)] px-2 py-1 text-xs text-[var(--muted)] disabled:opacity-40"
+              className="focus-control rounded-[var(--radius-sm)] border border-[var(--border)] px-2 py-1 text-xs text-[var(--muted)] hover:bg-[var(--surface-raised)] disabled:opacity-40"
               disabled={visible.length < 2}
               onClick={() => jump(1)}
               aria-label="Next finding"
@@ -214,14 +212,14 @@ export function CodeEvidenceSection({
                 }
               >
                 <article
-                  className={`grid gap-4 rounded-[var(--radius-sm)] border-l-4 p-4 ${evidenceSurface(item)}`}
+                  className={`grid gap-4 border-l-2 pl-4 ${evidenceSurface(item)}`}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="font-mono text-xs text-[var(--muted)]">
                         {item.path} · L{item.startLine}–{item.endLine}
                       </p>
-                      <strong className="mt-1 block font-mono text-xs uppercase tracking-[0.12em] text-[var(--accent)]">
+                      <strong className="mt-1 block text-sm font-semibold text-[var(--text)]">
                         {item.title}
                       </strong>
                       <p className="mt-1 text-xs text-[var(--muted)]">
@@ -233,7 +231,7 @@ export function CodeEvidenceSection({
                     </div>
                     <button
                       type="button"
-                      className="focus-control rounded-[6px] border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 font-mono text-xs font-semibold text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                      className="focus-control rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1 text-xs font-medium text-[var(--muted)] hover:bg-[var(--surface-raised)] hover:text-[var(--text)]"
                       onClick={() => void copy(item)}
                     >
                       {copiedId === item.id ? 'Copied' : 'Copy code'}
@@ -249,21 +247,21 @@ export function CodeEvidenceSection({
 
                   <dl className="grid gap-2 border-y border-[var(--border)] py-3 text-sm">
                     <EvidenceRow
-                      label="What Proofly found"
+                      label="What was found"
                       value={item.contribution}
                     />
                     <EvidenceRow label="Why it matters" value={item.why} />
                   </dl>
 
                   {item.suggestion ? (
-                    <details className="group rounded-[7px] border border-[var(--warning)] bg-[var(--warning-soft)] px-4 py-3">
-                      <summary className="focus-control cursor-pointer font-mono text-sm font-bold text-[var(--warning)]">
-                        How can I improve this?
+                    <details className="group rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2.5">
+                      <summary className="focus-control cursor-pointer text-sm font-medium text-[var(--accent)]">
+                        How to fix it
                       </summary>
                       <div className="mt-3 grid gap-2 text-sm text-[var(--text)]">
                         <p>{item.suggestion}</p>
                         {item.example ? (
-                          <pre className="overflow-x-auto rounded-[6px] bg-[#080c14] p-3 font-mono text-xs leading-5 text-slate-200">
+                          <pre className="overflow-x-auto rounded-[var(--radius-sm)] border border-[#30363d] bg-[#0d1117] p-3 font-mono text-xs leading-5 text-[#e6edf3]">
                             <code>{item.example}</code>
                           </pre>
                         ) : null}
@@ -272,12 +270,12 @@ export function CodeEvidenceSection({
                   ) : null}
 
                   <a
-                    className="focus-control inline-flex w-fit items-center gap-1.5 rounded-[6px] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 font-mono text-xs font-semibold text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                    className="focus-control inline-flex w-fit items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-xs font-medium text-[var(--text)] hover:bg-[var(--surface-raised)]"
                     href={item.githubUrl}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Open file on GitHub <span aria-hidden="true">↗</span>
+                    Open on GitHub <span aria-hidden="true">↗</span>
                   </a>
                 </article>
               </Collapsible>
@@ -336,7 +334,7 @@ function normalizeEvidence(
       language: finding.language,
       fragment: finding.fragment,
       title: finding.title,
-      detected: `Code Quality · ${finding.dimension.replace('-', ' ')}`,
+      detected: `Code quality · ${finding.dimension.replace('-', ' ')}`,
       why: finding.why,
       contribution: finding.found,
       suggestion:
@@ -360,9 +358,9 @@ function FilterButton({
     <button
       type="button"
       aria-pressed={active}
-      className={`focus-control rounded-[5px] border px-2.5 py-1.5 font-mono text-xs font-semibold uppercase tracking-wide ${
+      className={`focus-control rounded-[var(--radius-sm)] border px-2.5 py-1 text-xs font-medium ${
         active
-          ? 'border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
+          ? 'border-[var(--border-strong)] bg-[var(--surface-raised)] text-[var(--text)]'
           : 'border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)]'
       }`}
       onClick={onClick}
@@ -375,15 +373,14 @@ function FilterButton({
 function EvidenceRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="grid gap-1 sm:grid-cols-[9rem_1fr]">
-      <dt className="technical-label">{label}</dt>
+      <dt className="field-label">{label}</dt>
       <dd className="text-[var(--muted)]">{value}</dd>
     </div>
   );
 }
 
 function badgeClass(item: EvidenceItem): string {
-  const base =
-    'rounded-[5px] px-2 py-1 font-mono text-xs font-semibold uppercase';
+  const base = 'rounded-full px-2 py-0.5 text-xs font-medium';
   if (item.kind === 'strength') {
     return `${base} bg-[var(--success-soft)] text-[var(--success)]`;
   }
@@ -395,12 +392,12 @@ function badgeClass(item: EvidenceItem): string {
 
 function evidenceSurface(item: EvidenceItem): string {
   if (item.kind === 'strength') {
-    return 'border-[var(--success)] bg-[var(--success-soft)]';
+    return 'border-[var(--success)]';
   }
   if (isGenuineIssue(item.title)) {
-    return 'border-[var(--error)] bg-[var(--error-soft)]';
+    return 'border-[var(--error)]';
   }
-  return 'border-[var(--warning)] bg-[var(--warning-soft)]';
+  return 'border-[var(--warning)]';
 }
 
 function isGenuineIssue(title: string): boolean {

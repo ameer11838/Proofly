@@ -1,3 +1,4 @@
+import { plural } from './text.js';
 import type {
   CodeQualityDimension,
   CodeQualityDimensionKey,
@@ -87,7 +88,7 @@ export function analyzeCodeQuality(
     summary:
       sourceFiles.length === 0
         ? 'No readable source files were available for code-quality analysis.'
-        : `${sourceFiles.length} source file(s) inspected · ${strengths.length} supported strength(s) · ${improvements.length} improvement finding(s).`,
+        : `${plural(sourceFiles.length, 'source file')} inspected · ${plural(strengths.length, 'supported strength')} · ${plural(improvements.length, 'improvement finding')}.`,
     dimensions,
     findings,
   };
@@ -155,7 +156,7 @@ export function analyzeDevelopmentActivity(
     summary:
       analyzed.length === 0
         ? 'GitHub did not return commit history attributable to the analyzed user.'
-        : `${analyzed.length} attributable commit(s) across ${activeDays} active day(s) on ${scope}; ${meaningfulCommitCount} use descriptive subjects${largeCommitCount > 0 ? ` and ${largeCommitCount} unusually large commit(s) may be harder to review` : ''}. Latest activity was ${recentDevelopment ? 'within the last six months' : `on ${lastCommitAt?.slice(0, 10)}`}. Commit count is context, not a scoring target.`,
+        : `${plural(analyzed.length, 'attributable commit')} across ${plural(activeDays, 'active day')} on ${scope}; ${meaningfulCommitCount} use descriptive subjects${largeCommitCount > 0 ? ` and ${plural(largeCommitCount, 'unusually large commit')} may be harder to review` : ''}. Latest activity was ${recentDevelopment ? 'within the last six months' : `on ${lastCommitAt?.slice(0, 10)}`}. Commit count is context, not a scoring target.`,
     commits: analyzed.slice(0, 20),
   };
 }
@@ -799,7 +800,7 @@ function buildDimensions(
       summary:
         relevant.length === 0
           ? 'No reliable positive or negative signal was detected in the sampled source.'
-          : `${strengths.length} supported strength(s) and ${improvements.length} improvement finding(s) in sampled source.`,
+          : `${plural(strengths.length, 'supported strength')} and ${plural(improvements.length, 'improvement finding')} in sampled source.`,
       findingIds: relevant.map((finding) => finding.id),
     };
   });

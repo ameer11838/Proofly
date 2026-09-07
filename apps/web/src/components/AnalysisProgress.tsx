@@ -19,13 +19,12 @@ interface AnalysisProgressProps {
 }
 
 const stageDescriptions: Record<AnalysisStage, string> = {
-  'fetching-repository': 'Reading repository structure',
-  'inspecting-code': 'Analyzing source files and dependencies',
-  'extracting-evidence':
-    'Finding code fragments that demonstrate technical skills',
-  'career-matching': 'Comparing evidence against the selected career',
-  scoring: 'Calculating project strength and career relevance',
-  'building-report': 'Preparing your Proofly assessment',
+  'fetching-repository': 'Reading the repository structure',
+  'inspecting-code': 'Reading source files and dependencies',
+  'extracting-evidence': 'Pulling code that shows technical skills',
+  'career-matching': 'Matching that code against the career track',
+  scoring: 'Scoring project strength and career relevance',
+  'building-report': 'Assembling the report',
 };
 
 export function AnalysisProgress({
@@ -51,42 +50,25 @@ export function AnalysisProgress({
       // Announced politely so the stage changes reach screen readers without flooding them.
       aria-live="polite"
       aria-busy={completion === undefined}
-      className="surface mt-5 overflow-hidden font-mono"
+      className="surface mt-4 overflow-hidden"
     >
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-3.5">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
         <div className="flex items-center gap-2.5">
-          {completion ? (
-            <span
-              className="text-sm font-bold text-[var(--success)]"
-              aria-hidden="true"
-            >
-              ✓
-            </span>
-          ) : (
-            <span
-              className="size-2 rounded-full bg-[var(--accent)] motion-safe:animate-pulseDot"
-              aria-hidden="true"
-            />
-          )}
-          <h3 className="text-sm font-bold uppercase tracking-[0.14em] text-[var(--text)]">
+          <StatusDot done={completion !== undefined} />
+          <h3 className="text-sm font-semibold text-[var(--text)]">
             {completion ? 'Analysis complete' : 'Analyzing repository'}
           </h3>
+          <span className="truncate font-mono text-xs text-[var(--muted)]">
+            {repositoryFullName} · {careerLabel}
+          </span>
         </div>
-        <p className="text-xs tabular-nums text-[var(--muted)]">
-          ANALYSIS /{' '}
-          <span className="font-bold text-[var(--accent)]">{percent}%</span>
-        </p>
+        <span className="text-xs tabular-nums text-[var(--muted)]">
+          {percent}%
+        </span>
       </header>
 
-      <div className="border-b border-[var(--border)] px-5 py-2.5">
-        <p className="truncate text-xs uppercase tracking-wider text-[var(--muted)]">
-          {repositoryFullName}{' '}
-          <span className="text-[var(--border-strong)]">·</span> {careerLabel}
-        </p>
-      </div>
-
       {/* Progress bar: width is driven only by reported stage completion. */}
-      <div className="h-1.5 overflow-hidden bg-[var(--surface-subtle)]">
+      <div className="h-0.5 bg-[var(--surface-raised)]">
         <div
           role="progressbar"
           aria-valuenow={percent}
@@ -98,59 +80,45 @@ export function AnalysisProgress({
         />
       </div>
 
-      <div className="grid gap-px bg-[var(--border)] md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-        <ol className="grid gap-2.5 bg-[var(--surface)] p-5">
-          {state.stages.map((stage, index) => (
-            <StageRow key={stage.stage} stage={stage} index={index} />
+      <div className="grid gap-px bg-[var(--border)] md:grid-cols-2">
+        <ol className="grid content-start gap-2 bg-[var(--surface)] p-4">
+          {state.stages.map((stage) => (
+            <StageRow key={stage.stage} stage={stage} />
           ))}
         </ol>
 
-        <div className="bg-[var(--surface)] p-5">
+        <div className="bg-[var(--surface)] p-4">
           <div
             ref={logRef}
-            className="h-44 overflow-y-auto rounded-[7px] border border-[var(--border)] bg-[var(--surface-subtle)] p-4 text-xs leading-6"
+            className="h-40 overflow-y-auto rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface-subtle)] p-3 font-mono text-xs leading-6"
           >
             {tail.length === 0 ? (
-              <p className="text-[var(--muted)]">$ awaiting first response…</p>
+              <p className="text-[var(--muted)]">Waiting for the first result…</p>
             ) : (
               tail.map((line) => (
                 <p
                   key={line.id}
-                  className="flex gap-2 text-[var(--text)] motion-safe:animate-riseIn"
+                  className="break-all text-[var(--muted)] last:text-[var(--text)] motion-safe:animate-riseIn"
                 >
-                  <span
-                    className="shrink-0 text-[var(--accent)]"
-                    aria-hidden="true"
-                  >
-                    ›
-                  </span>
-                  <span className="min-w-0 break-all">{line.message}</span>
+                  {line.message}
                 </p>
               ))
-            )}
-            {completion ? null : (
-              <p
-                className="mt-0.5 text-[var(--accent)] motion-safe:animate-caret"
-                aria-hidden="true"
-              >
-                ▍
-              </p>
             )}
           </div>
 
           {state.evidence.length > 0 ? (
-            <div className="mt-3 border-l-2 border-[var(--accent)] bg-[var(--accent-soft)] p-3">
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--accent)]">
+            <div className="mt-3 rounded-[var(--radius-sm)] border border-[var(--border)] p-3">
+              <p className="field-label font-medium text-[var(--text)]">
                 Evidence found
               </p>
-              <ul className="mt-1.5 grid gap-1.5">
+              <ul className="mt-2 grid gap-2">
                 {state.evidence.map((item) => (
                   <li key={`${item.path}-${item.startLine}-${item.detected}`}>
-                    <p className="truncate text-sm text-[var(--text)]">
+                    <p className="truncate text-xs text-[var(--text)]">
                       {item.detected}
                     </p>
-                    <p className="truncate text-xs text-[var(--muted)]">
-                      {item.path} : {item.startLine}–{item.endLine}
+                    <p className="truncate font-mono text-xs text-[var(--muted)]">
+                      {item.path}:{item.startLine}–{item.endLine}
                     </p>
                   </li>
                 ))}
@@ -160,7 +128,7 @@ export function AnalysisProgress({
         </div>
       </div>
 
-      <footer className="flex flex-wrap gap-x-5 gap-y-1 border-t border-[var(--border)] px-5 py-3 text-xs uppercase tracking-wider text-[var(--muted)]">
+      <footer className="flex flex-wrap gap-x-5 gap-y-1 border-t border-[var(--border)] px-4 py-2.5 text-xs text-[var(--muted)]">
         {completion ? (
           <>
             <Counter value={completion.filesAnalyzed} label="files analyzed" />
@@ -172,10 +140,7 @@ export function AnalysisProgress({
               value={completion.careerSkills}
               label="career-relevant skills"
             />
-            <Counter
-              value={completion.score.toFixed(1)}
-              label="proofly score"
-            />
+            <Counter value={completion.score.toFixed(1)} label="score" />
           </>
         ) : (
           <>
@@ -198,46 +163,56 @@ export function AnalysisProgress({
   );
 }
 
-function StageRow({ stage, index }: { stage: StageState; index: number }) {
-  const number = String(index + 1).padStart(2, '0');
+export function StatusDot({ done }: { done: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`size-2 shrink-0 rounded-full ${
+        done
+          ? 'bg-[var(--success)]'
+          : 'bg-[var(--accent)] motion-safe:animate-pulseDot'
+      }`}
+    />
+  );
+}
+
+function StageRow({ stage }: { stage: StageState }) {
   const isActive = stage.status === 'active';
   const isComplete = stage.status === 'complete';
 
   return (
-    <li>
-      <div className="flex items-baseline gap-2">
-        <span
-          className={`text-xs tabular-nums ${
-            isComplete || isActive
-              ? 'text-[var(--accent)]'
-              : 'text-[var(--border-strong)]'
-          }`}
-        >
-          {number} /
-        </span>
-        <span
-          className={`text-xs font-bold uppercase tracking-[0.1em] ${
+    <li className="flex gap-2.5">
+      <span
+        aria-hidden="true"
+        className={`mt-[0.45rem] size-1.5 shrink-0 rounded-full ${
+          isComplete
+            ? 'bg-[var(--success)]'
+            : isActive
+              ? 'bg-[var(--accent)]'
+              : 'bg-[var(--border)]'
+        }`}
+      />
+      <div className="min-w-0">
+        <p
+          className={`text-sm ${
             isActive
-              ? 'text-[var(--text)]'
+              ? 'font-medium text-[var(--text)]'
               : isComplete
                 ? 'text-[var(--muted)]'
                 : 'text-[var(--border-strong)]'
           }`}
         >
           {analysisStageLabels[stage.stage]}
-        </span>
-        {isComplete ? (
-          <span className="text-xs text-[var(--success)]" aria-hidden="true">
-            ✓
-          </span>
-        ) : null}
-        {isActive ? <span className="sr-only">in progress</span> : null}
-      </div>
-      {isActive ? (
-        <p className="mt-0.5 pl-8 text-xs text-[var(--muted)]">
-          {stageDescriptions[stage.stage]}…
         </p>
-      ) : null}
+        {isActive ? (
+          <>
+            <p className="text-xs text-[var(--muted)]">
+              {stageDescriptions[stage.stage]}…
+            </p>
+            <span className="sr-only">in progress</span>
+          </>
+        ) : null}
+      </div>
     </li>
   );
 }
@@ -245,7 +220,9 @@ function StageRow({ stage, index }: { stage: StageState; index: number }) {
 function Counter({ value, label }: { value: number | string; label: string }) {
   return (
     <span>
-      <span className="font-bold tabular-nums text-[var(--text)]">{value}</span>{' '}
+      <span className="font-medium tabular-nums text-[var(--text)]">
+        {value}
+      </span>{' '}
       {label}
     </span>
   );

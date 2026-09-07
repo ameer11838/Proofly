@@ -20,32 +20,28 @@ export function CareerScoreCard({ portfolio }: CareerScoreCardProps) {
 
   return (
     <section className="surface mb-6 overflow-hidden">
-      <div className="grid gap-8 border-b border-[var(--border)] p-6 lg:grid-cols-[17rem_minmax(0,1fr)] lg:p-8">
+      <div className="grid gap-8 border-b border-[var(--border)] p-5 lg:grid-cols-[15rem_minmax(0,1fr)] lg:p-6">
         <div className="lg:border-r lg:border-[var(--border)] lg:pr-8">
-          <p className="section-kicker">01 / Portfolio</p>
-          <p className="technical-label mt-6">Overall career score</p>
-          <p className="mt-1 flex items-baseline gap-2">
-            <span className="text-7xl font-black tracking-[-0.065em] text-[var(--accent)]">
+          {/* The label already names the career, so it captions the number directly
+              instead of repeating a generic "Overall career score" above it. */}
+          <h3 className="field-label">{portfolio.label}</h3>
+          <p className="mt-1 flex items-baseline gap-1.5">
+            <span className="text-5xl font-semibold tracking-tight tabular-nums text-[var(--text)]">
               {portfolio.score.toFixed(1)}
             </span>
-            <span className="text-xl font-semibold text-[var(--muted)]">
-              / 10
-            </span>
+            <span className="text-lg text-[var(--muted)]">/ 10</span>
           </p>
-          <h3 className="mt-3 text-base font-semibold leading-6 text-[var(--text)]">
-            {portfolio.label}
-          </h3>
-          <p className="mt-4 flex flex-wrap items-center gap-2">
+          <p className="mt-3 flex flex-wrap items-center gap-2">
             <BandBadge band={portfolio.band} />
-            <span className="technical-label">
+            <span className="field-label">
               {coverage.deeplyAnalyzed} of {coverage.discovered} repositories
               analyzed
             </span>
           </p>
         </div>
 
-        <div className="grid gap-6">
-          <p className="max-w-3xl text-sm leading-6 text-[var(--muted)]">
+        <div className="grid gap-5">
+          <p className="max-w-measure text-base text-[var(--text)]">
             {portfolio.summary}
           </p>
 
@@ -60,32 +56,28 @@ export function CareerScoreCard({ portfolio }: CareerScoreCardProps) {
               title="Portfolio strengths"
               items={portfolio.portfolioStrengths}
               tone="neutral"
-              empty="No repository cleared the strength bar yet."
+              empty="No repository cleared the strength bar."
             />
             <DriverList
               title="Main gaps"
               items={portfolio.mainGaps}
               tone="negative"
-              empty="No consistent gap was detected."
+              empty="No recurring gap showed up."
             />
           </div>
 
           <div>
-            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-xs uppercase tracking-wider text-[var(--muted)]">
-              <span>Repository evidence</span>
-              <span aria-hidden="true">→</span>
-              <span>repository scores</span>
-              <span aria-hidden="true">→</span>
-              <span className="text-[var(--text)]">portfolio career score</span>
+            <p className="field-label font-medium text-[var(--text)]">
+              How this is calculated
             </p>
-            <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
+            <p className="mt-1 max-w-measure text-sm text-[var(--muted)]">
               {portfolio.method}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="px-6 lg:px-8">
+      <div className="px-5 lg:px-6">
         <Collapsible
           title="Analysis coverage"
           summary={`${coverage.discovered} discovered · ${coverage.metadataAnalyzed} ranked · ${coverage.deeplyAnalyzed} deeply analyzed · ${coverage.skipped} skipped`}
@@ -112,10 +104,9 @@ export function CareerScoreCard({ portfolio }: CareerScoreCardProps) {
             </dl>
 
             {coverage.rateLimited ? (
-              <p className="rounded-[7px] bg-[var(--warning-soft)] px-4 py-3 text-sm text-[var(--warning)]">
-                GitHub stopped serving requests before every repository could be
-                read, so this score reflects only the repositories that were
-                reached. Adding a GitHub token raises the limit.
+              <p className="rounded-[var(--radius-sm)] border border-[var(--warning)] bg-[var(--warning-soft)] px-3 py-2 text-sm text-[var(--warning)]">
+                GitHub rate-limited the run, so this score only covers the
+                repositories that were reached. A GitHub token raises the limit.
               </p>
             ) : null}
 
@@ -139,7 +130,7 @@ export function CareerScoreCard({ portfolio }: CareerScoreCardProps) {
               </div>
             ) : (
               <p className="text-sm text-[var(--muted)]">
-                Every discovered repository was read in full.
+                Every repository was read in full.
               </p>
             )}
           </div>
@@ -147,10 +138,10 @@ export function CareerScoreCard({ portfolio }: CareerScoreCardProps) {
       </div>
 
       {portfolio.contributors.length > 0 ? (
-        <div className="border-t border-[var(--border)] px-6 lg:px-8">
+        <div className="border-t border-[var(--border)] px-5 lg:px-6">
           <Collapsible
             title="How each repository contributed"
-            summary={`${portfolio.contributors.length} repositories, ordered by their share of the score`}
+            summary={`${portfolio.contributors.length} repositories, by share of the score`}
             defaultOpen
           >
             <ContributorTable contributors={portfolio.contributors} />
@@ -158,7 +149,7 @@ export function CareerScoreCard({ portfolio }: CareerScoreCardProps) {
         </div>
       ) : null}
 
-      <p className="border-t border-[var(--border)] px-6 py-3 text-xs text-[var(--muted)] lg:px-8">
+      <p className="border-t border-[var(--border)] px-5 py-3 text-xs text-[var(--muted)] lg:px-6">
         {portfolio.disclaimer}
       </p>
     </section>
@@ -183,7 +174,7 @@ function ContributorTable({
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
                 <a
-                  className="truncate font-mono text-sm font-semibold text-[var(--text)] transition hover:text-[var(--accent)]"
+                  className="truncate font-mono text-sm font-medium text-[var(--text)] hover:text-[var(--accent)] hover:underline"
                   href={contributor.htmlUrl}
                   target="_blank"
                   rel="noreferrer"
@@ -192,7 +183,7 @@ function ContributorTable({
                 </a>
                 <StatusBadge status={contributor.status} />
               </div>
-              <span className="shrink-0 font-mono text-xs font-bold tabular-nums text-[var(--accent)]">
+              <span className="shrink-0 text-xs font-medium tabular-nums text-[var(--muted)]">
                 {contributor.contribution > 0
                   ? `${Math.round(contributor.contribution * 100)}% of score`
                   : 'No contribution'}
@@ -234,7 +225,7 @@ function ContributorTable({
         <button
           type="button"
           onClick={() => setShowAll((current) => !current)}
-          className="focus-control w-fit rounded-[7px] border border-[var(--border)] px-3.5 py-1.5 text-xs font-semibold text-[var(--text)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+          className="focus-control w-fit rounded-[var(--radius-sm)] border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text)] hover:bg-[var(--surface-raised)]"
         >
           {showAll
             ? 'Show top contributions only'
@@ -261,11 +252,11 @@ function Metric({
   return (
     <div className="grid gap-1">
       <div className="flex items-baseline justify-between gap-3">
-        <dt className="technical-label normal-case tracking-normal">
+        <dt className="field-label">
           {label}:
         </dt>
         <dd
-          className={`font-mono text-xs tabular-nums ${emphasis ? 'font-bold text-[var(--accent)]' : 'font-semibold text-[var(--text)]'}`}
+          className={`text-xs tabular-nums ${emphasis ? 'font-semibold text-[var(--text)]' : 'text-[var(--muted)]'}`}
         >
           {value.toFixed(1)}/10
         </dd>
@@ -293,7 +284,7 @@ function StatusBadge({ status }: { status: RepositoryAnalysisStatus }) {
 
   return (
     <span
-      className={`rounded-[5px] px-2 py-0.5 font-mono text-xs font-semibold uppercase tracking-wide ${colors[status]}`}
+      className={`rounded-full px-2 py-0.5 text-xs font-medium ${colors[status]}`}
     >
       {repositoryAnalysisStatusLabels[status]}
     </span>
@@ -303,8 +294,8 @@ function StatusBadge({ status }: { status: RepositoryAnalysisStatus }) {
 function CoverageStat({ label, value }: { label: string; value: number }) {
   return (
     <div className="border-l border-[var(--border)] px-4 py-2 first:border-l-0">
-      <dt className="technical-label">{label}</dt>
-      <dd className="mt-1 font-mono text-2xl font-bold tabular-nums text-[var(--text)]">
+      <dt className="field-label">{label}</dt>
+      <dd className="mt-1 text-2xl font-semibold tabular-nums text-[var(--text)]">
         {value}
       </dd>
     </div>
@@ -324,13 +315,13 @@ function DriverList({
 }) {
   const dot = {
     positive: 'bg-[var(--success)]',
-    neutral: 'bg-aurora',
+    neutral: 'bg-[var(--accent)]',
     negative: 'bg-[var(--warning)]',
   }[tone];
 
   return (
     <div>
-      <h4 className="technical-label flex items-center gap-2 sm:px-4">
+      <h4 className="field-label flex items-center gap-2 sm:px-4">
         <span className={`size-1.5 rounded-full ${dot}`} aria-hidden="true" />
         {title}
       </h4>
@@ -363,7 +354,7 @@ function BandBadge({ band }: { band: RelevanceBand }) {
 
   return (
     <span
-      className={`rounded-[5px] px-2 py-1 font-mono text-xs font-semibold uppercase tracking-wide ${colors[band]}`}
+      className={`rounded-full px-2 py-0.5 text-xs font-medium ${colors[band]}`}
     >
       {band}
     </span>

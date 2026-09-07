@@ -8,15 +8,13 @@ export function DevelopmentActivitySection({
   return (
     <div className="grid gap-4">
       <div className="flex flex-wrap items-baseline gap-2">
-        <strong className="font-mono text-2xl text-[var(--text)]">
+        <strong className="text-xl font-semibold tabular-nums text-[var(--text)]">
           {activity.commitCount} commits
         </strong>
         <span aria-hidden="true" className="text-[var(--border-strong)]">
           ·
         </span>
-        <span className="font-semibold text-[var(--text)]">
-          {activity.label}
-        </span>
+        <span className="text-sm text-[var(--muted)]">{activity.label}</span>
       </div>
       <p className="text-sm leading-6 text-[var(--muted)]">
         {activity.summary}
@@ -45,14 +43,14 @@ export function DevelopmentActivitySection({
                   {commit.reason}
                 </p>
                 {commit.quality === 'weak' ? (
-                  <p className="mt-1 text-xs text-[var(--warning)]">
-                    Prefer a concrete milestone, such as “Add GitHub repository
-                    contribution detection.”
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    Name the change instead, e.g. “Add contribution detection
+                    for forked repositories”.
                   </p>
                 ) : null}
               </div>
               <span
-                className={`w-fit rounded-[5px] px-2 py-1 font-mono text-xs font-semibold uppercase ${
+                className={`w-fit rounded-full px-2 py-0.5 text-xs font-medium ${
                   commit.quality === 'clear'
                     ? 'bg-[var(--success-soft)] text-[var(--success)]'
                     : 'bg-[var(--warning-soft)] text-[var(--warning)]'
@@ -65,9 +63,9 @@ export function DevelopmentActivitySection({
         </ul>
       ) : null}
 
-      <p className="text-xs text-[var(--muted)]">
-        Proofly evaluates whether history communicates meaningful milestones. It
-        never rewards artificial commits or commit count alone.
+      <p className="text-xs leading-5 text-[var(--muted)]">
+        Scored on whether the messages describe real milestones. Commit count on
+        its own earns nothing.
       </p>
     </div>
   );

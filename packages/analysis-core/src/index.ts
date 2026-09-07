@@ -7,3 +7,4 @@ export * from './portfolioScore.js';
 export * from './repositoryAnalysis.js';
 export * from './scoreModel.js';
 export * from './scoring.js';
+export * from './text.js';

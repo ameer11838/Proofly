@@ -1,3 +1,4 @@
+import { plural } from './text.js';
 import {
   scoreCategoryLabels,
   type CareerRelevanceReport,
@@ -194,7 +195,7 @@ function technicalSkillsSignals(context: AnalysisContext): BuiltSignal[] {
         detail:
           sourcePaths.length === 0
             ? 'No authored source files were found.'
-            : `${sourcePaths.length} source file(s) and ${sourceLines} non-empty sampled source line(s) show the implementation behind the project.`,
+            : `${plural(sourcePaths.length, 'source file')} and ${plural(sourceLines, 'non-empty sampled source line')} show the implementation behind the project.`,
         evidence: sourcePaths.slice(0, 4).map((path) => ({
           kind: 'file' as const,
           label: 'Source implementation',
@@ -209,7 +210,7 @@ function technicalSkillsSignals(context: AnalysisContext): BuiltSignal[] {
               detail:
                 sourcePaths.length === 0
                   ? 'Add the source code that implements the project’s main behavior.'
-                  : `The implementation is still small (${sourcePaths.length} source file(s)). Extend the core workflow with a meaningful feature or deeper technical behavior instead of adding repository ceremony.`,
+                  : `The implementation is still small (${plural(sourcePaths.length, 'source file')}). Extend the core workflow with a meaningful feature or deeper technical behavior instead of adding repository ceremony.`,
             },
     },
     {
@@ -219,7 +220,7 @@ function technicalSkillsSignals(context: AnalysisContext): BuiltSignal[] {
         earned: credit(0.7, technologies.size / 4),
         detail:
           technologies.size > 0
-            ? `${technologies.size} language/framework/dependency signal(s) were observed, including ${[...technologies].slice(0, 5).join(', ')}.`
+            ? `${plural(technologies.size, 'language/framework/dependency signal')} were observed, including ${[...technologies].slice(0, 5).join(', ')}.`
             : 'No language, framework, or parseable dependency evidence was found.',
         evidence: [
           ...(context.repository.language
@@ -267,7 +268,7 @@ function technicalSkillsSignals(context: AnalysisContext): BuiltSignal[] {
         label: 'Technical depth',
         max: 0.5,
         earned: credit(0.5, depthFraction),
-        detail: `${directories.size} source module director${directories.size === 1 ? 'y' : 'ies'}, ${sourcePaths.length} source file(s), and ${domains.length} implemented technical domain(s) contribute to depth.`,
+        detail: `${directories.size} source module director${directories.size === 1 ? 'y' : 'ies'}, ${plural(sourcePaths.length, 'source file')}, and ${plural(domains.length, 'implemented technical domain')} contribute to depth.`,
         evidence: sourcePaths.slice(0, 2).map((path) => ({
           kind: 'file' as const,
           label: 'Technical depth',
@@ -329,7 +330,7 @@ function creativityComplexitySignals(context: AnalysisContext): BuiltSignal[] {
         earned: credit(0.6, scopeFraction),
         detail:
           sourcePaths.length > 0
-            ? `${sourcePaths.length} production source file(s) and ${sourceLines} sampled source line(s) indicate the amount of implemented scope.`
+            ? `${plural(sourcePaths.length, 'production source file')} and ${plural(sourceLines, 'sampled source line')} indicate the amount of implemented scope.`
             : 'No production source scope was found.',
         evidence: sourcePaths.slice(0, 4).map((path) => ({
           kind: 'file' as const,
@@ -343,7 +344,7 @@ function creativityComplexitySignals(context: AnalysisContext): BuiltSignal[] {
         label: 'Multiple technologies working together',
         max: 0.5,
         earned: credit(0.5, integrationFraction),
-        detail: `${context.dependencies.length} dependencies, ${directories.size} module directories, and ${domains.length} technical domain(s) provide observable integration evidence.`,
+        detail: `${context.dependencies.length} dependencies, ${directories.size} module directories, and ${plural(domains.length, 'technical domain')} provide observable integration evidence.`,
         evidence: context.dependencies.slice(0, 4).map((dependency) => ({
           kind: 'dependency' as const,
           label: dependency.name,
@@ -366,7 +367,7 @@ function creativityComplexitySignals(context: AnalysisContext): BuiltSignal[] {
         earned: credit(0.6, challengeFraction),
         detail:
           domains.length + challengeEvidence.length > 0
-            ? `${domains.length} technical domain and ${challengeEvidence.length} defensive implementation signal(s) show non-trivial technical decisions.`
+            ? `${domains.length} technical domain and ${plural(challengeEvidence.length, 'defensive implementation signal')} show non-trivial technical decisions.`
             : 'The sampled code does not yet expose a non-trivial algorithm, integration, data flow, model, or defensive implementation challenge.',
         evidence: challengeEvidence.slice(0, 4).map((evidence) => ({
           kind: 'file' as const,
@@ -446,7 +447,7 @@ function projectQualitySignals(context: AnalysisContext): BuiltSignal[] {
         detail:
           hasTests && hasAutomation
             ? 'Both automated tests and an automation pipeline are present—evidence expected of exceptionally polished work.'
-            : 'Tests and CI/CD are treated as polish signals: their absence does not erase the project’s technical value, but prevents full Project Quality credit.',
+            : 'Tests and CI/CD are treated as polish signals: their absence does not erase the project’s technical value, but prevents full Project quality credit.',
         evidence: [
           ...(hasTests
             ? [
@@ -753,7 +754,7 @@ function testingSignals(context: AnalysisContext): BuiltSignal[] {
         earned: testPaths.length > 0 ? 0.8 : 0,
         detail:
           testPaths.length > 0
-            ? `${testPaths.length} test file(s) in the repository tree, including ${testPaths.slice(0, 2).join(', ')}.`
+            ? `${plural(testPaths.length, 'test file')} in the repository tree, including ${testPaths.slice(0, 2).join(', ')}.`
             : 'No file in the repository tree matches a common test naming pattern.',
         evidence:
           testPaths.length > 0
@@ -810,7 +811,7 @@ function testingSignals(context: AnalysisContext): BuiltSignal[] {
         detail:
           sourcePaths.length === 0
             ? 'No source files were found to compare against.'
-            : `${testPaths.length} test file(s) for ${sourcePaths.length} source file(s) (${Math.round(ratio * 100)}%). Full credit at 25%.`,
+            : `${plural(testPaths.length, 'test file')} for ${plural(sourcePaths.length, 'source file')} (${Math.round(ratio * 100)}%). Full credit at 25%.`,
         evidence: [
           {
             kind: 'static-analysis',
@@ -922,7 +923,7 @@ function ciSignals(context: AnalysisContext): BuiltSignal[] {
         earned: workflowPaths.length > 0 ? 0.6 : 0,
         detail:
           workflowPaths.length > 0
-            ? `${workflowPaths.length} workflow file(s): ${workflowPaths.slice(0, 2).join(', ')}.`
+            ? `${plural(workflowPaths.length, 'workflow file')}: ${workflowPaths.slice(0, 2).join(', ')}.`
             : 'No .github/workflows, GitLab CI, or Jenkins configuration is present in the tree.',
         evidence:
           workflowPaths.length > 0
@@ -1064,7 +1065,7 @@ function codeStructureSignals(context: AnalysisContext): BuiltSignal[] {
           ? undefined
           : {
               title: 'Group source files into directories',
-              detail: `${rootLevel.length} source file(s) sit loose at the repository root (${rootLevel.slice(0, 3).join(', ')}). Move them into a package or src/ directory so the entry points are obvious.`,
+              detail: `${plural(rootLevel.length, 'source file')} sit loose at the repository root (${rootLevel.slice(0, 3).join(', ')}). Move them into a package or src/ directory so the entry points are obvious.`,
             },
     },
     {
@@ -1355,7 +1356,7 @@ function completenessSignals(context: AnalysisContext): BuiltSignal[] {
         max: 0.2,
         earned: hasMetadata ? 0.2 : 0,
         detail: hasMetadata
-          ? `Description set and ${repository.topics.length} topic(s) applied.`
+          ? `Description set and ${plural(repository.topics.length, 'topic')} applied.`
           : repository.description === null
             ? 'The repository has no description.'
             : 'The repository has no topics.',
@@ -1381,7 +1382,7 @@ function completenessSignals(context: AnalysisContext): BuiltSignal[] {
         detail:
           daysSincePush === null
             ? 'The repository has no recorded push date.'
-            : `Last pushed ${daysSincePush} day(s) ago. Full credit within 180 days.`,
+            : `Last pushed ${plural(daysSincePush, 'day')} ago. Full credit within 180 days.`,
         evidence: [
           {
             kind: 'github',

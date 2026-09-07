@@ -12,20 +12,17 @@ const groups: { strength: EvidenceStrength; title: string; blurb: string }[] = [
   {
     strength: 'strong',
     title: 'Strong evidence',
-    blurb:
-      'Demonstrated by source code, or by a declared dependency plus supporting metadata.',
+    blurb: 'Shown in the source, or by a dependency plus supporting metadata.',
   },
   {
     strength: 'moderate',
     title: 'Moderate evidence',
-    blurb:
-      'Suggested by metadata only. Counts half until code demonstrates it.',
+    blurb: 'Metadata only. Counts half until code backs it up.',
   },
   {
     strength: 'missing',
-    title: 'Missing or weak evidence',
-    blurb:
-      'Nothing in the analyzed files supports this skill. Proofly does not claim it.',
+    title: 'No evidence',
+    blurb: 'Nothing in the files that were read supports this skill.',
   },
 ];
 
@@ -81,7 +78,7 @@ function SkillCard({ skill }: { skill: SkillEvidence }) {
         <p className="text-sm font-semibold text-[var(--text)]">
           {skill.label}
         </p>
-        <span className="technical-label shrink-0 normal-case tracking-normal">
+        <span className="field-label shrink-0">
           weight {skill.weight}
         </span>
       </div>

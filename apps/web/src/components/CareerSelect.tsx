@@ -17,13 +17,13 @@ export function CareerSelect({
 }: CareerSelectProps) {
   return (
     <div className="grid gap-1.5">
-      <label className="technical-label font-semibold" htmlFor={id}>
+      <label className="field-label font-medium text-[var(--text)]" htmlFor={id}>
         Target career
       </label>
       <div className="relative">
         <select
           id={id}
-          className="focus-control w-full appearance-none rounded-[7px] border border-[var(--border)] bg-[var(--surface-subtle)] py-3 pl-3.5 pr-10 text-sm font-medium text-[var(--text)] outline-none transition hover:border-[var(--border-strong)]"
+          className="focus-control w-full appearance-none rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] py-2 pl-3 pr-9 text-sm text-[var(--text)] outline-none hover:border-[var(--border-strong)]"
           value={value}
           onChange={(event) => onChange(event.target.value as CareerPath)}
         >
@@ -42,7 +42,7 @@ export function CareerSelect({
           ))}
         </select>
         <svg
-          className="pointer-events-none absolute right-3.5 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]"
+          className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-[var(--muted)]"
           viewBox="0 0 16 16"
           fill="none"
           aria-hidden="true"

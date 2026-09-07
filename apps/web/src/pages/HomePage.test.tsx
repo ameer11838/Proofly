@@ -272,8 +272,8 @@ describe('HomePage', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Main gaps')).toBeInTheDocument();
 
-    // The evidence chain and the disclaimer must both stay visible.
-    expect(screen.getByText('portfolio career score')).toBeInTheDocument();
+    // The method note and the disclaimer must both stay visible.
+    expect(screen.getByText('How this is calculated')).toBeInTheDocument();
     expect(
       screen.getByText(
         /evidence-based portfolio assessment of public repositories/i,

@@ -6,14 +6,12 @@ export function CodeQualitySection({ report }: { report: CodeQualityReport }) {
     <div className="grid gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--border)] pb-4">
         <div>
-          <p className="technical-label">Technical Skills / source analysis</p>
-          <p className="mt-1 flex items-baseline gap-2">
-            <span className="font-mono text-4xl font-black text-[var(--accent)]">
+          <p className="field-label">Code quality</p>
+          <p className="mt-1 flex items-baseline gap-1.5">
+            <span className="text-3xl font-semibold tabular-nums text-[var(--text)]">
               {report.score.toFixed(1)}
             </span>
-            <span className="text-sm font-semibold text-[var(--muted)]">
-              / 10 Code Quality
-            </span>
+            <span className="text-sm text-[var(--muted)]">/ 10</span>
           </p>
         </div>
         <p className="max-w-xl text-sm text-[var(--muted)]">
@@ -28,7 +26,7 @@ export function CodeQualitySection({ report }: { report: CodeQualityReport }) {
             title={dimension.label}
             summary={dimension.summary}
             badge={
-              <span className="font-mono text-xs font-bold tabular-nums text-[var(--text)]">
+              <span className="text-xs font-medium tabular-nums text-[var(--muted)]">
                 {dimension.score.toFixed(1)}
               </span>
             }
@@ -51,16 +49,7 @@ export function CodeQualitySection({ report }: { report: CodeQualityReport }) {
                         key={finding.id}
                         className={`grid gap-1 rounded-[var(--radius-sm)] border-l-4 px-4 py-3 text-sm ${qualityFindingSurface(finding.kind, finding.title)}`}
                       >
-                        <p className="font-bold text-[var(--text)]">
-                          <span
-                            className={
-                              finding.kind === 'strength'
-                                ? 'text-[var(--success)]'
-                                : 'text-[var(--warning)]'
-                            }
-                          >
-                            {finding.kind === 'strength' ? '✓' : '△'}
-                          </span>{' '}
+                        <p className="font-medium text-[var(--text)]">
                           {finding.title}
                         </p>
                         <p className="font-mono text-xs text-[var(--muted)]">
@@ -72,8 +61,7 @@ export function CodeQualitySection({ report }: { report: CodeQualityReport }) {
                 </ul>
               ) : (
                 <p className="text-sm text-[var(--muted)]">
-                  Proofly found no reliable signal for this dimension in the
-                  sampled files, so it avoids making a stronger claim.
+                  The files that were read gave no reliable signal here.
                 </p>
               )}
             </div>
