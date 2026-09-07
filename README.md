@@ -16,7 +16,12 @@ Users enter a GitHub username and select a target technology career. Proofly ran
 - Checks every branch of a fork for commits attributable to the GitHub user.
 - Analyzes only the user's verified additions to a fork and excludes work by other contributors.
 
-The current scoring pipeline is deterministic and does not require an OpenAI, Gemini, or other AI API key.
+Proofly first calculates a deterministic score. When a Gemini API key is configured, Gemini
+3.5 Flash independently assesses the same five categories from the verified evidence and
+writes personalized feedback. The displayed repository score blends 70% deterministic
+analysis with 30% Gemini assessment. Without a key—or when Gemini is unavailable—the
+complete deterministic score and report remain available. The portfolio-level career score
+remains deterministic.
 
 ## How the analysis works
 
@@ -42,7 +47,7 @@ Scores are rated as Starting, Developing, Solid, Strong, or Exceptional. Missing
 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, TanStack Query
 - **Backend:** Node.js, Express 5, TypeScript, Zod
-- **Analysis:** Custom deterministic static-analysis and scoring engine
+- **Analysis:** Custom static analysis with optional 70/30 deterministic–Gemini hybrid scoring and feedback
 - **Data:** GitHub REST API and `raw.githubusercontent.com`
 - **Testing:** Vitest, React Testing Library, Supertest
 
@@ -114,6 +119,8 @@ It should contain:
 PORT=4000
 WEB_ORIGIN=http://localhost:5173
 GITHUB_TOKEN=
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-3.5-flash
 ```
 
 `GITHUB_TOKEN` is optional, but recommended to avoid GitHub's low unauthenticated rate limit. Create a [fine-grained GitHub personal access token](https://github.com/settings/personal-access-tokens/new) with read-only public repository access, then add it to `apps/api/.env`:
@@ -123,6 +130,11 @@ GITHUB_TOKEN=github_pat_your_token_here
 ```
 
 Do not commit this token or expose it in frontend environment variables.
+
+`GEMINI_API_KEY` is optional. Create a key in [Google AI Studio](https://aistudio.google.com/app/apikey)
+to enable hybrid repository scoring and AI-written feedback. Keep the key in the API
+environment only; never put it in a Vite/frontend variable. `GEMINI_MODEL` defaults to
+`gemini-3.5-flash`.
 
 ### 3. Build the project
 

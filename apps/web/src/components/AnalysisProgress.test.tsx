@@ -53,6 +53,7 @@ describe('AnalysisProgress', () => {
     expect(screen.getByText('Fetching repository')).toBeInTheDocument();
     expect(screen.getByText('Extracting evidence')).toBeInTheDocument();
     expect(screen.getByText('Building report')).toBeInTheDocument();
+    expect(screen.getByText('Generating AI assessment')).toBeInTheDocument();
     expect(
       screen.getByText(/pulling code that shows technical skills/i),
     ).toBeInTheDocument();
@@ -131,6 +132,8 @@ describe('AnalysisProgress', () => {
       'aria-valuenow',
       '0',
     );
-    expect(screen.getByText(/waiting for the first result/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/waiting for the first result/i),
+    ).toBeInTheDocument();
   });
 });

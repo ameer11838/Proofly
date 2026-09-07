@@ -198,6 +198,7 @@ describe('Proofly API', () => {
       'career-matching',
       'scoring',
       'building-report',
+      'generating-feedback',
     ];
     const indexes = progress.map((event) =>
       order.indexOf(event.payload.stage as string),

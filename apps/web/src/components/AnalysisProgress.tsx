@@ -25,6 +25,7 @@ const stageDescriptions: Record<AnalysisStage, string> = {
   'career-matching': 'Matching that code against the career track',
   scoring: 'Scoring project strength and career relevance',
   'building-report': 'Assembling the report',
+  'generating-feedback': 'Scoring and writing grounded feedback with Gemini',
 };
 
 export function AnalysisProgress({
@@ -93,7 +94,9 @@ export function AnalysisProgress({
             className="card-inset h-40 overflow-y-auto p-3 font-mono text-xs leading-6"
           >
             {tail.length === 0 ? (
-              <p className="text-[var(--muted)]">Waiting for the first result…</p>
+              <p className="text-[var(--muted)]">
+                Waiting for the first result…
+              </p>
             ) : (
               tail.map((line) => (
                 <p

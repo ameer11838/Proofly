@@ -54,9 +54,8 @@ describe('analysis progress', () => {
       },
     ]);
 
-    // 30% for fetching plus half of the 55% inspection weight, which lands a hair under
-    // 57.5 in floating point and therefore rounds down.
-    expect(halfwayThroughFiles.percent).toBe(57);
+    // 30% for fetching plus half of the 52% inspection weight.
+    expect(halfwayThroughFiles.percent).toBe(56);
     expect(halfwayThroughFiles.counters.filesInspected).toBe(6);
   });
 
@@ -76,7 +75,7 @@ describe('analysis progress', () => {
       },
     ]);
 
-    expect(state.percent).toBe(80);
+    expect(state.percent).toBe(77);
   });
 
   it('treats earlier stages as finished once a later one reports', () => {
@@ -91,7 +90,7 @@ describe('analysis progress', () => {
     expect(state.stages[5]?.status).toBe('pending');
   });
 
-  it('reaches 100 only when the final stage completes', () => {
+  it('reaches 100 only when the AI feedback stage completes', () => {
     const state = apply([
       { stage: 'building-report', status: 'active', message: 'BUILDING...' },
     ]);
@@ -102,8 +101,16 @@ describe('analysis progress', () => {
       status: 'complete',
       message: 'REPORT READY',
     });
-    expect(finished.percent).toBe(100);
-    expect(finished.activeStage).toBeNull();
+    expect(finished.percent).toBe(97);
+    expect(finished.activeStage).toBe('building-report');
+
+    const withFeedback = applyProgressEvent(finished, {
+      stage: 'generating-feedback',
+      status: 'complete',
+      message: 'FEEDBACK READY',
+    });
+    expect(withFeedback.percent).toBe(100);
+    expect(withFeedback.activeStage).toBeNull();
   });
 
   it('collects real evidence flashes newest first and caps the log', () => {

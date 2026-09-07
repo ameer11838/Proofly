@@ -21,6 +21,7 @@ import {
   summarizeContribution,
   unavailableContributionSummary,
 } from '../services/contributionService.js';
+import { addGeminiFeedback } from '../services/geminiFeedbackService.js';
 
 export async function listRankedRepositories(
   request: Request,
@@ -178,7 +179,7 @@ export async function streamRepositoryAnalysis(
     const contributionResolution = repository.fork
       ? await resolveForkContributions(client, repository, profile)
       : undefined;
-    const analysis = await analyzeRepositoryFromGitHub(
+    const deterministicAnalysis = await analyzeRepositoryFromGitHub(
       client,
       ownerResult.data,
       repoResult.data,
@@ -189,6 +190,11 @@ export async function streamRepositoryAnalysis(
         contributionResolution,
       },
     );
+    const analysis = await addGeminiFeedback(deterministicAnalysis, {
+      apiKey: config.geminiApiKey,
+      model: config.geminiModel,
+      onProgress: (event) => send('progress', event),
+    });
 
     send('result', analysis satisfies RepositoryAnalysisResponse);
   } catch (error) {
@@ -369,12 +375,16 @@ export async function analyzeRepository(
   });
 
   try {
-    const analysis = await analyzeRepositoryFromGitHub(
+    const deterministicAnalysis = await analyzeRepositoryFromGitHub(
       client,
       ownerResult.data,
       repoResult.data,
       queryResult.data.careerPath,
     );
+    const analysis = await addGeminiFeedback(deterministicAnalysis, {
+      apiKey: config.geminiApiKey,
+      model: config.geminiModel,
+    });
 
     response.json(analysis satisfies RepositoryAnalysisResponse);
   } catch (error) {

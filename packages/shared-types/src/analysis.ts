@@ -252,6 +252,7 @@ export const analysisStages = [
   'career-matching',
   'scoring',
   'building-report',
+  'generating-feedback',
 ] as const;
 
 export type AnalysisStage = (typeof analysisStages)[number];
@@ -263,6 +264,7 @@ export const analysisStageLabels: Record<AnalysisStage, string> = {
   'career-matching': 'Matching to career',
   scoring: 'Scoring',
   'building-report': 'Building report',
+  'generating-feedback': 'Generating AI assessment',
 };
 
 /**
@@ -274,11 +276,12 @@ export const analysisStageLabels: Record<AnalysisStage, string> = {
  */
 export const analysisStageWeights: Record<AnalysisStage, number> = {
   'fetching-repository': 0.3,
-  'inspecting-code': 0.55,
+  'inspecting-code': 0.52,
   'extracting-evidence': 0.06,
   'career-matching': 0.04,
   scoring: 0.03,
   'building-report': 0.02,
+  'generating-feedback': 0.03,
 };
 
 /** Counters carrying observed totals only. Absent means "not yet known". */
@@ -448,6 +451,49 @@ export interface RepositoryEvidenceRating {
   reasoning: string[];
 }
 
+/** A Gemini-written observation grounded in deterministic Proofly evidence. */
+export interface AiFeedbackPoint {
+  title: string;
+  explanation: string;
+  evidence: EvidenceReference[];
+}
+
+/** A Gemini-written improvement grounded in deterministic evidence. */
+export interface AiImprovementFeedback extends AiFeedbackPoint {
+  suggestedAction: string;
+}
+
+export interface AiCategoryScore {
+  category: ScoreCategoryKey;
+  label: string;
+  score: number;
+  maxScore: number;
+  rationale: string;
+  evidence: EvidenceReference[];
+}
+
+export interface HybridScoreAssessment {
+  method: 'hybrid';
+  deterministicScore: number;
+  deterministicWeight: number;
+  aiScore: number;
+  aiWeight: number;
+  finalScore: number;
+  categories: AiCategoryScore[];
+}
+
+export interface AiGeneratedFeedback {
+  provider: 'Google Gemini';
+  model: string;
+  summary: string;
+  careerNarrative: string;
+  strengths: AiFeedbackPoint[];
+  improvements: AiImprovementFeedback[];
+  scoring: HybridScoreAssessment;
+  /** Makes the model's bounded role explicit wherever its output is displayed. */
+  disclaimer: string;
+}
+
 export interface RepositoryAnalysisResponse {
   repository: GitHubRepository;
   careerPath: CareerPath;
@@ -464,6 +510,8 @@ export interface RepositoryAnalysisResponse {
   suggestions: string[];
   analyzedFiles: string[];
   ignoredFilesCount: number;
+  /** Optional narrative layer. Scores and evidence remain deterministic. */
+  aiFeedback?: AiGeneratedFeedback;
   /** Full attribution audit when this analysis is limited to a fork user's patches. */
   userContribution?: UserContributionReport;
 }

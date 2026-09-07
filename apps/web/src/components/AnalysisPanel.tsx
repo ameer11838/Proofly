@@ -12,6 +12,7 @@ import { FileInspector } from './FileInspector.js';
 import { ImprovementSection } from './ImprovementSection.js';
 import { DevelopmentActivitySection } from './DevelopmentActivitySection.js';
 import { ScoreBreakdownSection } from './ScoreBreakdownSection.js';
+import { AiFeedbackSection } from './AiFeedbackSection.js';
 
 interface AnalysisPanelProps {
   analysis: RepositoryAnalysisResponse;
@@ -93,12 +94,24 @@ export function AnalysisPanel({ analysis }: AnalysisPanelProps) {
 
       <AnalysisOverview analysis={analysis} />
 
+      {analysis.aiFeedback ? (
+        <AiFeedbackSection feedback={analysis.aiFeedback} />
+      ) : null}
+
       <div className="px-5 py-2">
         {/* 3-7. Progressive detail, collapsed by default apart from the breakdown. */}
         <div id={sectionId('scores')} className="scroll-mt-14">
           <Collapsible
-            title="Score breakdown"
-            summary="How the five categories add up to the score"
+            title={
+              analysis.aiFeedback
+                ? 'Deterministic score breakdown'
+                : 'Score breakdown'
+            }
+            summary={
+              analysis.aiFeedback
+                ? 'The rule-based assessment that contributes 70% of the final score'
+                : 'How the five categories add up to the score'
+            }
             badge={
               <span className="text-xs font-medium tabular-nums text-[var(--muted)]">
                 {breakdown.score.toFixed(1)}/{breakdown.maxScore.toFixed(0)}
@@ -274,13 +287,7 @@ function Badge({
     Limited: 'bg-[var(--surface-3)] text-[var(--muted)]',
   };
 
-  return (
-    <span
-      className={`pill ${colors[band]}`}
-    >
-      {children}
-    </span>
-  );
+  return <span className={`pill ${colors[band]}`}>{children}</span>;
 }
 
 function importanceClassName(importance: 'High' | 'Medium' | 'Low'): string {

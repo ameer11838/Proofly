@@ -259,6 +259,96 @@ describe('AnalysisPanel', () => {
     expect(screen.getByText('Total')).toBeInTheDocument();
   });
 
+  it('labels and renders Gemini feedback as a narrative layer', () => {
+    render(
+      <AnalysisPanel
+        analysis={{
+          ...analysis,
+          rating: {
+            ...analysis.rating,
+            score: 3.8,
+          },
+          aiFeedback: {
+            provider: 'Google Gemini',
+            model: 'gemini-3.5-flash',
+            summary: 'The project shows focused quantitative implementation.',
+            careerNarrative:
+              'The time-series evidence is relevant to quantitative development.',
+            strengths: [
+              {
+                title: 'Applied time-series work',
+                explanation: 'The code calculates returns from indexed prices.',
+                evidence: [
+                  {
+                    kind: 'file',
+                    label: 'Time-series transformation',
+                    path: 'src/backtest.py',
+                    line: 3,
+                  },
+                ],
+              },
+            ],
+            improvements: [
+              {
+                title: 'Add automated tests',
+                explanation:
+                  'The numerical behavior needs regression coverage.',
+                suggestedAction:
+                  'Test missing values and short price histories.',
+                evidence: [
+                  {
+                    kind: 'static-analysis',
+                    label: 'Automated testing gap',
+                    path: 'src/surface.py',
+                  },
+                ],
+              },
+            ],
+            scoring: {
+              method: 'hybrid',
+              deterministicScore: 3.5,
+              deterministicWeight: 0.7,
+              aiScore: 4.5,
+              aiWeight: 0.3,
+              finalScore: 3.8,
+              categories: [
+                {
+                  category: 'presentation',
+                  label: 'Presentation',
+                  score: 0.7,
+                  maxScore: 1,
+                  rationale:
+                    'The README explains the project at a basic level.',
+                  evidence: [
+                    {
+                      kind: 'file',
+                      label: 'README',
+                      path: 'README.md',
+                    },
+                  ],
+                },
+              ],
+            },
+            disclaimer:
+              'The final score blends deterministic analysis with Gemini.',
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByText('Hybrid assessment')).toBeInTheDocument();
+    expect(
+      screen.getByText('Google Gemini · gemini-3.5-flash'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Applied time-series work')).toBeInTheDocument();
+    expect(screen.getByText('src/backtest.py:3')).toBeInTheDocument();
+    expect(screen.getByText('70% of final score')).toBeInTheDocument();
+    expect(screen.getByText('30% of final score')).toBeInTheDocument();
+    expect(
+      screen.getByText(/final score blends deterministic analysis/i),
+    ).toBeInTheDocument();
+  });
+
   it('renders the verbatim code fragment with line numbers and a GitHub link', async () => {
     render(<AnalysisPanel analysis={analysis} />);
 

@@ -14,8 +14,8 @@ Proofly is organized as a monorepo with separate applications and reusable packa
 
 ## Current product boundary
 
-Proofly currently avoids authentication, persistence, and AI-generated scoring. It implements
-this deterministic product loop:
+Proofly currently avoids authentication, persistence, and AI-only scoring. It implements
+this evidence-first product loop:
 
 1. Enter a GitHub username.
 2. Select a target career.
@@ -36,9 +36,15 @@ The deeper repository analysis should be implemented as separate modules:
 3. Deterministic static analysis.
 4. Evidence package creation.
 5. Deterministic explanation and prioritized feedback.
-6. Structured API response.
+6. Optional Gemini category assessment and narrative generated from the bounded evidence package.
+7. A server-calculated repository score blending 70% deterministic and 30% Gemini scores.
+8. Structured API response.
 
-Gemini should receive only filtered evidence and selected excerpts, never a whole unfiltered repository.
+Gemini receives only filtered evidence and selected excerpts, never a whole unfiltered
+repository. Its structured response is validated before use. Category scores are bounded by
+the existing rubric and must cite evidence from the matching category. Proofly calculates
+the blend in code and discards the Gemini response when it is incomplete, out of bounds,
+cites unsupported evidence, or the API is unavailable.
 
 ## Routing note
 

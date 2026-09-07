@@ -9,7 +9,7 @@ dependency, a topic, or a piece of GitHub metadata.
 | Pass     | Input                                                                | Output                                        |
 | -------- | -------------------------------------------------------------------- | --------------------------------------------- |
 | Ranking  | Repository metadata; verified contribution paths/languages for forks | 0-100 evidence fit, with weighted components  |
-| Analysis | Downloaded file contents plus the full tree                          | 0-10 Proofly score, with a category breakdown |
+| Analysis | Downloaded file contents plus the full tree                          | 0-10 deterministic base, optional Gemini assessment, and final score |
 
 Ranking never claims more than metadata can support. Skills that are only visible inside
 source files are excluded from the ranking denominator, so a repository is not penalised for
@@ -41,10 +41,10 @@ to other contributors do not feed the repository or portfolio score.
 Only declared dependency names and topic names are searched for in a description. Generic
 words such as `src`, `module`, or `cli` are never treated as career evidence.
 
-## The Proofly score (0-10)
+## The deterministic score (0-10)
 
-The score is the sum of five portfolio-focused categories. Category points are expressed directly on
-the 0-10 scale, so the breakdown always adds up to the score with nothing unexplained.
+The deterministic base is the sum of five portfolio-focused categories. Category points are
+expressed directly on the 0-10 scale, so its breakdown always adds up with nothing unexplained.
 
 | Category                | Weight   |
 | ----------------------- | -------- |
@@ -58,6 +58,23 @@ the 0-10 scale, so the breakdown always adds up to the score with nothing unexpl
 Each category is itself the sum of its signals, and every signal carries the observation it
 was derived from. All values are whole tenths, so the arithmetic is exact rather than
 approximately correct.
+
+## Hybrid repository score
+
+When Gemini is configured, it independently scores those same five categories from a bounded
+evidence package. Each Gemini category score must stay within the category maximum and cite
+only evidence assigned to that category. The API rejects incomplete, duplicated, out-of-range,
+or incorrectly cited assessments.
+
+The server—not Gemini—calculates the displayed repository score:
+
+```text
+final score = deterministic score × 0.70 + Gemini score × 0.30
+```
+
+The UI exposes the deterministic score, Gemini score, category rationales, evidence citations,
+weights, and final score. If Gemini is unconfigured or unavailable, the deterministic score is
+used unchanged. The portfolio-level career score remains deterministic.
 
 Testing, CI/CD, documentation, error handling, architecture, structure, and completeness
 remain visible as supporting checks. Tests and CI contribute only inside Project Quality;
@@ -120,8 +137,8 @@ non-obvious logic has useful decision context.
 Every strength and improvement includes a file, line range, verbatim fragment, rationale,
 and specific next step. Pattern matches are deliberately described as what Proofly observed
 (for example, “no response check was found nearby”), not as unprovable runtime behavior.
-Code-quality findings deepen Technical Skills feedback but do not change the five category
-weights or manufacture score points.
+Code-quality findings deepen Technical Skills feedback without changing the five category
+weights. Gemini may consider those verified findings only through the bounded evidence package.
 
 ## Development activity
 
@@ -133,10 +150,10 @@ never recommends artificial commits or awards points merely for increasing the c
 
 ## Improvement plan
 
-Scored improvements are derived from unearned signal points, so the projected score is
-arithmetic rather than a promise. Source-quality improvements carry no invented point value;
-they are prioritized separately by severity, include affected paths, and explain a concrete
-approach. Quick wins are separated from higher-impact engineering work.
+Scored improvements are derived from unearned deterministic signal points, so the projected
+base score is arithmetic rather than a promise. Source-quality improvements carry no invented
+point value; they are prioritized separately by severity, include affected paths, and explain
+a concrete approach. Quick wins are separated from higher-impact engineering work.
 
 ## File sampling
 
